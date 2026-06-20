@@ -59,10 +59,8 @@ public class AuthenticationController {
      * @throws org.springframework.security.core.AuthenticationException si l'authentification échoue
      */
     @PostMapping("/authenticate")
-    public ResponseEntity<?> authenticate(@RequestBody AuthenticationRequest request) {
+    public ResponseEntity<AuthenticationResponse> authenticate(@RequestBody AuthenticationRequest request) {
         try {
-            log.info("Authentication attempt for user: {}", request.getLogin());
-
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             request.getLogin(),
@@ -70,24 +68,20 @@ public class AuthenticationController {
                     )
             );
 
-            log.info("User authenticated successfully: {}", request.getLogin());
-
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            // Si aucune exception n'est lancée, récupère les détails complets de l'utilisateur
             final UserDetails userDetails = userDetailsService.loadUserByUsername(request.getLogin());
-
-            // Génère un token JWT pour l'utilisateur authentifié
             final String jwt = jwtUtil.generateToken(userDetails);
 
-            // Retourne une réponse 200 OK avec le token JWT
-            return ResponseEntity.ok(AuthenticationResponse.builder().accessToken(jwt).build());
+            return ResponseEntity.ok(AuthenticationResponse.builder()
+                    .accessToken(jwt)
+                    .build());
+
         } catch (BadCredentialsException e) {
-            log.error("Authentication failed: Bad credentials for user {}", request.getLogin());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+
         } catch (Exception e) {
-            log.error("Authentication error: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Authentication error: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 

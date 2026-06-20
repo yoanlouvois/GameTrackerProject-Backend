@@ -49,14 +49,24 @@ public class JwtRequestFilter extends OncePerRequestFilter {
      * @throws IOException Si une erreur d'E/S survient pendant le traitement
      */
     @Override
-    protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain chain)
+    protected void doFilterInternal(@NonNull HttpServletRequest request,
+                                    @NonNull HttpServletResponse response,
+                                    @NonNull FilterChain chain)
             throws ServletException, IOException {
 
-        // Récupération de l'en-tête d'autorisation contenant le token JWT
+        final String path = request.getServletPath();
+
+        if (isPublicEndpoint(path)) {
+            chain.doFilter(request, response);
+            return;
+        }
+
         final String authorizationHeader = request.getHeader("Authorization");
 
         String username = null;
         String jwt = null;
+
+        // le reste de ton code ne change pas
 
         // Vérification de l'existence et du format de l'en-tête Authorization
         // Les tokens JWT sont envoyés dans le format "Bearer [token]"
@@ -101,5 +111,15 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         // Passage au filtre suivant dans la chaîne
         // C'est essentiel pour que la requête soit traitée normalement après l'authentification
         chain.doFilter(request, response);
+    }
+
+    private boolean isPublicEndpoint(String path) {
+        return path.equals("/gametracker/v1/auth/authenticate")
+                || path.equals("/gametracker/v1/users/create")
+                || path.startsWith("/admin/seed")
+                || path.startsWith("/swagger-ui")
+                || path.startsWith("/v3/api-docs")
+                || path.startsWith("/swagger-resources")
+                || path.startsWith("/webjars");
     }
 }
