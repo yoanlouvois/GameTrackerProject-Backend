@@ -46,6 +46,7 @@ public class SecurityConfiguration {
                         // Autoriser l'accès aux endpoints d'authentification et à la documentation OpenAPI
                         .requestMatchers(
                                 APP_ROOT + "/**",
+                                "/admin/seed/**",
                                 "/authenticate",
                                 "/v2/api-docs",
                                 "/swagger-resources",
