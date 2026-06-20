@@ -30,7 +30,7 @@ public class FavoriteGameController implements FavoriteGameApi {
 
     @Override
     public void removeFromFavorites(Integer favoriteId) {
-        favoriteGameService.removeFromFavorites(favoriteId);
+        favoriteGameService.deleteById(favoriteId);
     }
 
     @Override
@@ -53,10 +53,6 @@ public class FavoriteGameController implements FavoriteGameApi {
         return favoriteGameService.getFavoriteById(favoriteId);
     }
 
-    @Override
-    public void clearUserFavorites(Integer userId) {
-        favoriteGameService.clearUserFavorites(userId);
-    }
 
     @Override
     public Long getTotalFavoritesCountForGame(Integer gameId) {
@@ -93,8 +89,4 @@ public class FavoriteGameController implements FavoriteGameApi {
         return favoriteGameService.countFavoritesByUser(userId);
     }
 
-    @Override
-    public void deleteFavoriteByUserAndGame(Integer userId, Integer gameId) {
-        favoriteGameService.deleteFavoriteByUserAndGame(userId, gameId);
-    }
 }

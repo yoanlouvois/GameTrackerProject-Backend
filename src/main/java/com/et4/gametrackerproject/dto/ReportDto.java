@@ -3,13 +3,15 @@ package com.et4.gametrackerproject.dto;
 import com.et4.gametrackerproject.enums.ReportStatus;
 import com.et4.gametrackerproject.enums.ReportType;
 import com.et4.gametrackerproject.model.Report;
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 
 import java.time.Instant;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode
 public class ReportDto {
     private Integer id;
 

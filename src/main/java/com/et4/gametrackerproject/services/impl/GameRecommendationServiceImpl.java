@@ -3,6 +3,7 @@ package com.et4.gametrackerproject.services.impl;
 import com.et4.gametrackerproject.dto.GameRecommendationDto;
 import com.et4.gametrackerproject.exception.EntityNotFoundException;
 import com.et4.gametrackerproject.exception.ErrorCodes;
+import com.et4.gametrackerproject.exception.InvalidOperationException;
 import com.et4.gametrackerproject.model.Game;
 import com.et4.gametrackerproject.model.GameRecommendation;
 import com.et4.gametrackerproject.model.User;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -87,54 +89,29 @@ public class GameRecommendationServiceImpl implements GameRecommendationService 
 
     // Supprime une recommandation
     @Override
-    public void deleteRecommendation(Integer recommendationId) {
+    public void deleteRecommendationById(Integer recommendationId) {
         if (recommendationId == null) {
             throw new IllegalArgumentException("L'ID de la recommandation ne peut être null");
         }
         GameRecommendation recommendation = gameRecommendationRepository.findById(recommendationId)
                 .orElseThrow(() -> new EntityNotFoundException("Recommandation non trouvée avec l'ID " + recommendationId, ErrorCodes.GAME_RECOMMENDATION_NOT_FOUND));
+
+        Optional<Game> games = gameRepository.findByGameRecommendationId(recommendationId);
+        if (games.isPresent()) {
+            log.error("Impossible de supprimer l'entrée de leaderboard avec l'ID {} car elle est utilisée par le jeu {}", recommendationId, games.get().getId());
+            throw new InvalidOperationException("Impossible de supprimer l'entrée de leaderboard car elle est utilisée par le jeu",
+                    ErrorCodes.GAME_RECOMMENDATION_ALREADY_USED);
+        }
+
+        Optional<User> users = userRepository.findByGameRecommendationId(recommendationId);
+        if (users.isPresent()) {
+            log.error("Impossible de supprimer l'entrée de leaderboard avec l'ID {} car elle est utilisée par l'utilisateur {}", recommendationId, users.get().getId());
+            throw new InvalidOperationException("Impossible de supprimer l'entrée de leaderboard car elle est utilisée par l'utilisateur",
+                    ErrorCodes.GAME_RECOMMENDATION_ALREADY_USED);
+        }
+
+
         gameRecommendationRepository.delete(recommendation);
-        log.info("Recommandation avec l'ID {} supprimée", recommendationId);
-    }
-
-    // Supprime toutes les recommandations entre deux utilisateurs (dans les deux sens)
-    @Override
-    public void removeAllRecommendationsBetweenUsers(Integer user1Id, Integer user2Id, Pageable pageable) {
-        if (user1Id == null || user2Id == null) {
-            throw new IllegalArgumentException("Les IDs des utilisateurs doivent être fournis");
-        }
-        User user1 = userRepository.findById(user1Id)
-                .orElseThrow(() -> new EntityNotFoundException("Utilisateur non trouvé avec l'ID " + user1Id, ErrorCodes.USER_NOT_FOUND));
-        User user2 = userRepository.findById(user2Id)
-                .orElseThrow(() -> new EntityNotFoundException("Utilisateur non trouvé avec l'ID " + user2Id, ErrorCodes.USER_NOT_FOUND));
-        // Récupère les recommandations envoyées de user1 à user2
-        List<GameRecommendation> recs1 = gameRecommendationRepository.findBySenderAndReceiver(user1, user2);
-        // Récupère les recommandations envoyées de user2 à user1
-        List<GameRecommendation> recs2 = gameRecommendationRepository.findBySenderAndReceiver(user2, user1);
-        recs1.addAll(recs2);
-        if (!recs1.isEmpty()) {
-            gameRecommendationRepository.deleteAll(recs1);
-            log.info("Suppression de {} recommandations entre les utilisateurs {} et {}", recs1.size(), user1Id, user2Id);
-        } else {
-            log.info("Aucune recommandation trouvée entre les utilisateurs {} et {}", user1Id, user2Id);
-        }
-    }
-
-    // Supprime toutes les recommandations pour un jeu spécifique
-    @Override
-    public void removeAllRecommendationsForGame(Integer gameId) {
-        if (gameId == null) {
-            throw new IllegalArgumentException("L'ID du jeu ne peut être null");
-        }
-        Game game = gameRepository.findById(gameId)
-                .orElseThrow(() -> new EntityNotFoundException("Jeu non trouvé avec l'ID " + gameId, ErrorCodes.GAME_NOT_FOUND));
-        List<GameRecommendation> recommendations = gameRecommendationRepository.findByGame(game);
-        if (!recommendations.isEmpty()) {
-            gameRecommendationRepository.deleteAll(recommendations);
-            log.info("Suppression de {} recommandations pour le jeu {}", recommendations.size(), gameId);
-        } else {
-            log.info("Aucune recommandation trouvée pour le jeu {}", gameId);
-        }
     }
 
 

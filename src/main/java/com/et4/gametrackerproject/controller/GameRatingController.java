@@ -36,7 +36,7 @@ public class GameRatingController implements GameRatingApi {
 
     @Override
     public void deleteRating(Integer ratingId) {
-        gameRatingService.deleteRating(ratingId);
+        gameRatingService.deleteRatingById(ratingId);
     }
 
     @Override
@@ -67,16 +67,6 @@ public class GameRatingController implements GameRatingApi {
     @Override
     public Page<GameRatingDto> getRecentRatings(Pageable pageable) {
         return gameRatingService.getRecentRatings(pageable);
-    }
-
-    @Override
-    public void deleteAllRatingsForGame(Integer gameId) {
-        gameRatingService.deleteAllRatingsForGame(gameId);
-    }
-
-    @Override
-    public void deleteAllRatingsForUser(Integer userId) {
-        gameRatingService.deleteAllRatingsForUser(userId);
     }
 
     @Override

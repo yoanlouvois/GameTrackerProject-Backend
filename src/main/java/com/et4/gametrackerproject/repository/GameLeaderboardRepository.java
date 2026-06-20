@@ -51,4 +51,8 @@ public interface GameLeaderboardRepository extends JpaRepository<GameLeaderboard
 
 
     void deleteGameLeaderboardByGame(Game game);
+
+    // Supprimer le classement d'un utilisateur pour un jeu id
+    @Query("SELECT gl FROM GameLeaderboard gl WHERE gl.user = :user AND gl.game.id = :gameId")
+    Optional<GameLeaderboard> findByGameId(Integer id);
 }

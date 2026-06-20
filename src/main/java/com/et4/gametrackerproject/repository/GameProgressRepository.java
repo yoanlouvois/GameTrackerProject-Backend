@@ -67,4 +67,7 @@ public interface GameProgressRepository extends JpaRepository<GameProgress,Integ
     List<Object[]> findUsersWithLongestStreaks();
 
 
+    // Récupérer les progress par gameId
+    @Query("SELECT gp FROM GameProgress gp WHERE gp.game.id = :gameId")
+    Optional<GameProgress> findByGameId(Integer id);
 }

@@ -5,15 +5,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 public interface TagService {
 
     // Opérations de base
     TagDto createTag(TagDto tagDto);
     TagDto updateTag(Integer tagId, TagDto tagDto);
-    void deleteTag(Integer tagId);
+    void deleteTagById(Integer tagId);
 
     // Récupération
     TagDto getTagById(Integer tagId);

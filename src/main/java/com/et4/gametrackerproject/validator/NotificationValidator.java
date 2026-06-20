@@ -31,7 +31,7 @@ public class NotificationValidator {
             errors.add("Notification type is required");
         }
 
-        if (StringUtils.hasLength(notification.getContent())) {
+        if (!StringUtils.hasLength(notification.getContent())) {
             errors.add("Notification content is required");
         } else if (notification.getContent().length() > 500) { // Limite arbitraire
             errors.add("Notification content cannot exceed 500 characters");

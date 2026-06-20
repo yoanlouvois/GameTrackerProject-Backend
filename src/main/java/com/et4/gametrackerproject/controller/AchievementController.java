@@ -21,14 +21,21 @@ public class AchievementController implements AchievementApi {
         this.achievementService = achievementservice;
     }
 
+    @Override
+    public AchievementDto createAchievement(AchievementDto achievementDto) {
+        return achievementService.createAchievement(achievementDto);
+    }
 
-    //@Override
-    //@GetMapping(value = "/api/achievements/all", produces = MediaType.APPLICATION_JSON_VALUE)
-    //@Operation(summary = "Renvoie la liste des achievements", description = "Renvoie la liste des achievements")
-    //@ApiResponses(value = {
-            //@ApiResponse(responseCode = "200", description = "La liste des achievements a été trouvée"),
-           // @ApiResponse(responseCode = "404", description = "Aucun achievement n'a été trouvé dans la BDD")
-    //})
+    @Override
+    public AchievementDto updateAchievement(Integer id, AchievementDto achievementDto) {
+        return achievementService.updateAchievement(id, achievementDto);
+    }
+
+    @Override
+    public void deleteAchievement(Integer id) {
+        achievementService.deleteAchievement(id);
+    }
+    @Override
     public List<AchievementDto> getAllAchievements() {
         return achievementService.getAllAchievements();
     }
@@ -53,15 +60,7 @@ public class AchievementController implements AchievementApi {
         return achievementService.getActiveAchievements();
     }
 
-    @Override
-    public AchievementDto createAchievement(AchievementDto achievementDto) {
-        return achievementService.createAchievement(achievementDto);
-    }
 
-    @Override
-    public AchievementDto updateAchievement(Integer id, AchievementDto achievementDto) {
-        return achievementService.updateAchievement(id, achievementDto);
-    }
 
 
     @Override

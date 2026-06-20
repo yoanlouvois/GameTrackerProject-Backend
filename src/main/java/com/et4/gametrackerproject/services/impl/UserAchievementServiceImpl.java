@@ -2,11 +2,12 @@ package com.et4.gametrackerproject.services.impl;
 
 import com.et4.gametrackerproject.dto.AchievementDto;
 import com.et4.gametrackerproject.dto.UserAchievementDto;
-import com.et4.gametrackerproject.dto.UserDto;
 import com.et4.gametrackerproject.exception.EntityNotFoundException;
 import com.et4.gametrackerproject.exception.ErrorCodes;
 import com.et4.gametrackerproject.exception.InvalidEntityException;
+import com.et4.gametrackerproject.exception.InvalidOperationException;
 import com.et4.gametrackerproject.model.Achievement;
+import com.et4.gametrackerproject.model.GameTag;
 import com.et4.gametrackerproject.model.User;
 import com.et4.gametrackerproject.model.UserAchievement;
 import com.et4.gametrackerproject.repository.AchievementRepository;
@@ -23,6 +24,7 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -65,9 +67,20 @@ public class UserAchievementServiceImpl implements UserAchievementService {
             throw new EntityNotFoundException("No userAchievement found with id : " + userAchievementId, ErrorCodes.USER_ACHIEVEMENT_NOT_FOUND);
         }
 
-        log.info("Deleting userAchievement with id : {}", userAchievementId);
+        Optional<User> users = userRepository.findByUserAchievementId(userAchievementId);
+        if (users.isPresent()) {
+            log.error("Impossible de supprimer le UserAchievement avec l'ID {} car il est référencé par un user", userAchievementId);
+            throw new InvalidOperationException("Impossible de supprimer le UserAchievement car il est référencé par un user",
+                    ErrorCodes.TAG_ALREADY_USED);
+        }
 
-        // TODO : Ajouter suppression des relations avant de supprimer l'entité
+        Optional<Achievement> achievements = achievementRepository.findByUserAchievementId(userAchievementId);
+        if (achievements.isPresent()) {
+            log.error("Impossible de supprimer le UserAchievement avec l'ID {} car il est référencé par un achievement", userAchievementId);
+            throw new InvalidOperationException("Impossible de supprimer le UserAchievement car il est référencé par un achievement",
+                    ErrorCodes.TAG_ALREADY_USED);
+        }
+
         userAchievementRepository.deleteById(userAchievementId);
     }
 
@@ -237,4 +250,5 @@ public class UserAchievementServiceImpl implements UserAchievementService {
 
         return userAchievementRepository.calculateGlobalUnlockRate(achievement);
     }
+
 }

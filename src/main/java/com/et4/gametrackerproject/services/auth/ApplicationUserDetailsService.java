@@ -1,7 +1,9 @@
 package com.et4.gametrackerproject.services.auth;
 
 import com.et4.gametrackerproject.dto.UserDto;
+import com.et4.gametrackerproject.model.auth.CustomUserDetails;
 import com.et4.gametrackerproject.services.UserService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -17,6 +19,7 @@ import java.util.ArrayList;
  * et les utilisateurs stockés dans votre base de données.
  */
 @Service
+@Slf4j
 public class ApplicationUserDetailsService implements UserDetailsService {
 
     /**
@@ -38,24 +41,21 @@ public class ApplicationUserDetailsService implements UserDetailsService {
      */
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        // Récupère les informations de l'utilisateur depuis le service utilisateur
-        UserDto user = userService.getUserByEmail(email);
+        try {
+            log.info("Attempting to load user with email: {}", email);
+            UserDto user = userService.getUserByEmail(email);
+            log.info("User found: {}", user.getEmail());
 
-        // Si l'utilisateur n'est pas trouvé, userService.getUserByEmail() devrait lancer
-        // une exception UsernameNotFoundException (vérifiez l'implémentation)
-
-        // Crée un objet UserDetails de Spring Security à partir des données de l'utilisateur
-        // Le constructeur prend:
-        // 1. Le nom d'utilisateur (email dans ce cas)
-        // 2. Le mot de passe de l'utilisateur (qui sera vérifié par Spring Security)
-        // 3. Une liste d'autorités/rôles (vide dans cet exemple - ArrayList<>())
-        return new User(user.getEmail(), user.getPassword(), new ArrayList<>());
-
-        // NOTE: Pour ajouter des rôles ou des autorisations, vous devriez remplacer
-        // new ArrayList<>() par une collection d'objets GrantedAuthority, par exemple:
-        //
-        // List<GrantedAuthority> authorities = new ArrayList<>();
-        // authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
-        // return new User(user.getEmail(), user.getPassword(), authorities);
+            return new CustomUserDetails(
+                    user.getEmail(),
+                    user.getPassword(),
+                    new ArrayList<>(),
+                    user.getId()  // Ajouter l'ID utilisateur ici
+            );
+        } catch (Exception e) {
+            log.error("Failed to load user: {}", e.getMessage());
+            throw new UsernameNotFoundException("User not found with email: " + email, e);
+        }
     }
+
 }

@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 public interface GameCommentRepository extends JpaRepository<GameComment,Integer> {
 
@@ -76,6 +77,11 @@ public interface GameCommentRepository extends JpaRepository<GameComment,Integer
     List<Object[]> findMostDiscussedCommentsByGame(@Param("game") Game game);
 
 
+    // Trouver les commentaires selon GameCommentLike Id
+    @Query("SELECT gc FROM GameComment gc JOIN gc.likes gcl WHERE gcl.id = :likeId")
+    Optional<GameComment> findByGameCommentLikeId(Integer likeId);
 
-
+    // Trouver les commentaires selon Game Id
+    @Query("SELECT gc FROM GameComment gc WHERE gc.game.id = :gameId")
+    Optional<GameComment> findByGameId(Integer id);
 }

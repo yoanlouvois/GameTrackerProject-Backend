@@ -5,8 +5,6 @@ import com.et4.gametrackerproject.enums.AchievementRarity;
 import com.et4.gametrackerproject.enums.AchievementType;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 public interface AchievementService {
 
@@ -27,4 +25,6 @@ public interface AchievementService {
     List<AchievementDto> getAchievementsByDescriptionContaining(String keyword);
 
     List<AchievementDto> countNumberAchievementsByType();
+
+    void deleteAchievement(Integer id);
 }

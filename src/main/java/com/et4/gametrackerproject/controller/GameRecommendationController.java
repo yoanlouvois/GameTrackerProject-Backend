@@ -33,7 +33,7 @@ public class GameRecommendationController implements GameRecommendationApi {
 
     @Override
     public void deleteRecommendation(Integer recommendationId) {
-        gameRecommendationService.deleteRecommendation(recommendationId);
+        gameRecommendationService.deleteRecommendationById(recommendationId);
     }
 
     @Override
@@ -70,17 +70,6 @@ public class GameRecommendationController implements GameRecommendationApi {
     public Page<GameRecommendationDto> searchRecommendations(String searchQuery, Pageable pageable) {
         return gameRecommendationService.searchRecommendations(searchQuery, pageable);
     }
-
-    @Override
-    public void removeAllRecommendationsBetweenUsers(Integer user1Id, Integer user2Id, Pageable pageable) {
-        gameRecommendationService.removeAllRecommendationsBetweenUsers(user1Id,user2Id,pageable);
-    }
-
-    @Override
-    public void removeAllRecommendationsForGame(Integer gameId) {
-        gameRecommendationService.removeAllRecommendationsForGame(gameId);
-    }
-
     @Override
     public Map<Integer, Long> getMostRecommendedGames(Pageable pageable) {
         return gameRecommendationService.getMostRecommendedGames(pageable);

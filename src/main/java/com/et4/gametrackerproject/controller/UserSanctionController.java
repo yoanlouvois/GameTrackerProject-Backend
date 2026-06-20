@@ -34,7 +34,7 @@ public class UserSanctionController implements UserSanctionApi {
 
     @Override
     public void removeSanction(Integer sanctionId) {
-        userSanctionService.removeSanction(sanctionId);
+        userSanctionService.deleteSanction(sanctionId);
     }
 
     @Override

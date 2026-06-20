@@ -3,12 +3,15 @@ package com.et4.gametrackerproject.services;
 import com.et4.gametrackerproject.dto.UserAchievementDto;
 import com.et4.gametrackerproject.dto.AchievementDto;
 import com.et4.gametrackerproject.dto.UserDto;
+import com.et4.gametrackerproject.model.Achievement;
+import com.et4.gametrackerproject.model.UserAchievement;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 public interface UserAchievementService {

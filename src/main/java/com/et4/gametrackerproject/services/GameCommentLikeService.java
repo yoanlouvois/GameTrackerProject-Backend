@@ -7,13 +7,12 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public interface GameCommentLikeService {
 
     //AJOUT/RETIRER
     GameCommentLikeDto addCommentLike(Integer userId, Integer commentId);
-    void removeCommentLike(Integer likeId);
+    void deleteGameCommentLikeById(Integer likeId);
 
 
 

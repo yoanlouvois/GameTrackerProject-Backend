@@ -49,14 +49,6 @@ public interface GameLeaderboardApi {
     })
     Page<GameLeaderboardDto> getLeaderboardForGame(@PathVariable Integer gameId,@PathVariable LeaderboardPeriod period, Pageable pageable);
 
-    @PutMapping(value = APP_ROOT + "/leaderboard/reset/{gameId}/{period}", produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Réinitialiser le leaderboard d'un jeu",description = "Réinitialiser le leaderboard d'un jeu")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Leaderboard réinitialisé"),
-            @ApiResponse(responseCode = "404", description = "Aucun leaderboard trouvé pour ce jeu")
-    })
-    void resetLeaderboard(@PathVariable Integer gameId,@PathVariable LeaderboardPeriod period);
-
     @GetMapping(value = APP_ROOT + "/leaderboard/period/{period}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Récupérer le leaderboard par période",description = "Récupérer le leaderboard par période")
     @ApiResponses({

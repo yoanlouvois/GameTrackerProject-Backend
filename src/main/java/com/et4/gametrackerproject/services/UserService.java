@@ -1,17 +1,13 @@
 package com.et4.gametrackerproject.services;
 
+import com.et4.gametrackerproject.dto.ChangerMdpUserDto;
 import com.et4.gametrackerproject.dto.UserDto;
 import com.et4.gametrackerproject.enums.OnlineStatus;
 import com.et4.gametrackerproject.enums.PrivacySetting;
-import com.et4.gametrackerproject.enums.ProfilRank;
 import com.et4.gametrackerproject.enums.ScreenTheme;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 public interface UserService {
 
@@ -61,5 +57,8 @@ public interface UserService {
     // Gestion des données
     UserDto importUserData(Integer userId, String jsonData);
     String exportUserData(Integer userId);
+
+    //Mot de de passe
+    UserDto changerMdp(ChangerMdpUserDto dto);
 
 }

@@ -39,7 +39,7 @@ public class UserValidator {
             return errors;
         }
 
-        if (StringUtils.hasLength(user.getUsername())) {
+        if (!StringUtils.hasLength(user.getUsername())) {
             errors.add("Username is required");
         } else if (user.getUsername().length() < MIN_USERNAME_LENGTH) {
             errors.add("Username must be at least " + MIN_USERNAME_LENGTH + " characters");
@@ -49,7 +49,7 @@ public class UserValidator {
             errors.add("Username can only contain letters, numbers, underscores and hyphens");
         }
 
-        if (StringUtils.hasLength(user.getEmail())) {
+        if (!StringUtils.hasLength(user.getEmail())) {
             errors.add("Email is required");
         } else if (!EMAIL_PATTERN.matcher(user.getEmail()).matches()) {
             errors.add("Email format is invalid");
@@ -58,7 +58,7 @@ public class UserValidator {
         if (user.getId() == null && user.getPassword() == null) {
             errors.add("Password is required");
         } else if (user.getPassword() != null) {
-            if (StringUtils.hasLength(user.getPassword())) {
+            if (!StringUtils.hasLength(user.getPassword())) {
                 errors.add("Password cannot be empty");
             } else if (user.getPassword().length() < MIN_PASSWORD_LENGTH) {
                 errors.add("Password must be at least " + MIN_PASSWORD_LENGTH + " characters");

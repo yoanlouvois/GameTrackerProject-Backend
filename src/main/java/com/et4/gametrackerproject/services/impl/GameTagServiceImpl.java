@@ -3,9 +3,8 @@ package com.et4.gametrackerproject.services.impl;
 import com.et4.gametrackerproject.dto.GameTagDto;
 import com.et4.gametrackerproject.exception.EntityNotFoundException;
 import com.et4.gametrackerproject.exception.ErrorCodes;
-import com.et4.gametrackerproject.model.Game;
-import com.et4.gametrackerproject.model.GameTag;
-import com.et4.gametrackerproject.model.Tag;
+import com.et4.gametrackerproject.exception.InvalidOperationException;
+import com.et4.gametrackerproject.model.*;
 import com.et4.gametrackerproject.repository.GameRepository;
 import com.et4.gametrackerproject.repository.GameTagRepository;
 import com.et4.gametrackerproject.repository.TagRepository;
@@ -17,6 +16,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -27,79 +27,73 @@ public class GameTagServiceImpl implements GameTagService {
 
     private final GameTagRepository gameTagRepository;
     private final TagRepository tagRepository;
+    private final GameRepository gameRepository;
 
     public GameTagServiceImpl(GameTagRepository gameTagRepository,
-                              GameRepository gameRepository,
-                              TagRepository tagRepository) {
+                              TagRepository tagRepository, GameRepository gameRepository) {
         this.gameTagRepository = gameTagRepository;
         this.tagRepository = tagRepository;
+        this.gameRepository = gameRepository;
     }
 
     @Override
-    public GameTagDto addTagToGame(Game game, Tag tag) {
-        if (game == null || tag == null) {
+    public GameTagDto addTagToGame(Integer gameId, Integer tagId) {
+        if (gameId == null || tagId == null) {
             throw new IllegalArgumentException("L'ID du jeu et du tag ne peuvent être null");
         }
 
         // Vérifier si l'association existe déjà (optionnel)
-        Optional<GameTag> existing = gameTagRepository.findByGameAndTag(game, tag);
+        Optional<GameTag> existing = gameTagRepository.findByGameAndTag(gameId, tagId);
         if (existing.isPresent()) {
-            log.info("Association déjà existante entre le jeu {} et le tag {}", game.getName(), tag.getName());
+            log.info("Association déjà existante entre le jeu {} et le tag {}", gameId, tagId);
             return GameTagDto.fromEntity(existing.get());
         }
 
         GameTag gameTag = GameTag.builder()
-                .game(game)
-                .tag(tag)
+                .game(Game.builder().id(gameId).build())
+                .tag(Tag.builder().id(tagId).build())
                 .build();
 
         GameTag savedAssociation = gameTagRepository.save(gameTag);
-        log.info("Tag {} ajouté au jeu {} avec l'association ID {}", tag.getName(), game.getName(), savedAssociation.getId());
+        log.info("Tag {} ajouté au jeu {} avec l'association ID {}", tagId, gameId, savedAssociation.getId());
         return GameTagDto.fromEntity(savedAssociation);
     }
 
     @Override
-    public Set<GameTagDto> addMultipleTagsToGame(Game game, Set<Tag> tags) {
-        if (game == null || tags == null || tags.isEmpty()) {
+    public Set<GameTagDto> addMultipleTagsToGame(Integer gameId, Set<Tag> tags) {
+        if (gameId == null || tags == null || tags.isEmpty()) {
             throw new IllegalArgumentException("L'ID du jeu et la liste des tags ne peuvent être null ou vide");
         }
         Set<GameTagDto> result = new HashSet<>();
         for (Tag tag : tags) {
-            result.add(addTagToGame(game, tag));
+            result.add(addTagToGame(gameId, tag.getId()));
         }
         return result;
     }
 
     @Override
-    public int removeMultipleTagsFromGame(Game game, Set<Tag> tags) {
-        if (game == null || tags == null || tags.isEmpty()) {
-            throw new IllegalArgumentException("L'ID du jeu et la liste des tags ne peuvent être null ou vide");
+    public void deleteGameTagById(Integer gameTagId) {
+        if(gameTagId == null) {
+            throw new IllegalArgumentException("Null Id");
         }
-        int count = 0;
-        for (Tag tag : tags) {
-            // Suppression individuelle si l'association existe
-            Optional<GameTag> association = gameTagRepository.findByGameAndTag(game, tag);
-            if (association.isPresent()) {
-                gameTagRepository.delete(association.get());
-                count++;
-                log.info("Association entre le jeu {} et le tag {} supprimée", game.getName(), tag.getName());
-            }
-        }
-        return count;
-    }
+        GameTag existingGameTag = gameTagRepository.findById(gameTagId)
+                .orElseThrow(() -> new EntityNotFoundException("Jeu non trouvé avec l'ID " + gameTagId, ErrorCodes.GAME_TAG_NOT_FOUND));
 
-    @Override
-    public void removeTagFromGame(Game game, Tag tag) {
-        if (game == null || tag == null) {
-            throw new IllegalArgumentException("L'ID du jeu et du tag ne peuvent être null");
+        Optional<Tag> tags = tagRepository.findByGameTagId(gameTagId);
+        if (tags.isPresent()) {
+            log.error("Impossible de supprimer le gameTag avec l'ID {} car il est référencé par un tag", gameTagId);
+            throw new InvalidOperationException("Impossible de supprimer le GameTag car il est référencé par un tag",
+                    ErrorCodes.GAME_TAG_ALREADY_USED);
         }
-        Optional<GameTag> association = gameTagRepository.findByGameAndTag(game, tag);
-        if (association.isPresent()) {
-            gameTagRepository.delete(association.get());
-            log.info("Association entre le jeu {} et le tag {} supprimée", game.getName(), tag.getName());
-        } else {
-            log.warn("Aucune association trouvée pour le jeu {} et le tag {}", game.getName(), tag.getName());
+
+        Optional<Game> games = gameRepository.findByGameTagId(gameTagId);
+        if (games.isPresent()) {
+            log.error("Impossible de supprimer le gameTag avec l'ID {} car il est référencé par un jeu", gameTagId);
+            throw new InvalidOperationException("Impossible de supprimer le GameTag car il est référencé par un jeu",
+                    ErrorCodes.GAME_TAG_ALREADY_USED);
         }
+
+        gameTagRepository.delete(existingGameTag);
     }
 
     @Override
@@ -120,26 +114,54 @@ public class GameTagServiceImpl implements GameTagService {
     }
 
     @Override
-    public Page<GameTagDto> getTagsForGame(Game game, Pageable pageable) {
-        if (game == null) {
+    public Page<GameTagDto> getTagsForGame(Integer gameId, Pageable pageable) {
+        if (gameId == null) {
             throw new IllegalArgumentException("L'ID du jeu ne peut être null");
         }
 
-        Page<GameTagDto> page = gameTagRepository.findByGame(game, pageable)
+        Page<GameTagDto> page = gameTagRepository.findByGame(gameId, pageable)
                 .map(GameTagDto::fromEntity);
-        log.info("Récupération des tags pour le jeu {} - page {}", game.getName(), pageable.getPageNumber());
+        log.info("Récupération des tags pour le jeu {} - page {}", gameId, pageable.getPageNumber());
         return page;
     }
 
     @Override
-    public Page<GameTagDto> getGamesForTag(Tag tag, Pageable pageable) {
-        if (tag == null) {
+    public Page<GameTagDto> getGamesForTag(Integer tagId, Pageable pageable) {
+        if (tagId == null) {
             throw new IllegalArgumentException("L'ID du tag ne peut être null");
         }
 
-        Page<GameTagDto> page = gameTagRepository.findByTag(tag, pageable)
+        Page<GameTagDto> page = gameTagRepository.findByTag(tagId, pageable)
                 .map(GameTagDto::fromEntity);
-        log.info("Récupération des associations pour le tag {} - page {}", tag.getName(), pageable.getPageNumber());
+        log.info("Récupération des associations pour le tag {} - page {}", tagId, pageable.getPageNumber());
         return page;
     }
+
+    @Override
+    public Long countTagsByGame(Integer gameId) {
+        if (gameId == null) {
+            throw new IllegalArgumentException("L'ID du jeu ne peut être null");
+        }
+        return gameTagRepository.countTagsByGame(gameId);
+    }
+
+    @Override
+    public Long countGamesByTag(Integer tagId) {
+        if (tagId == null) {
+            throw new IllegalArgumentException("L'ID du tag ne peut être null");
+        }
+        return gameTagRepository.countGamesByTag(tagId);
+    }
+
+    @Override
+    public Set<GameTagDto> getMostPopularTags(Pageable pageable) {
+        if (pageable == null) {
+            throw new IllegalArgumentException("La pagination ne peut être null");
+        }
+        Set<GameTagDto> popularTags = new HashSet<>();
+        gameTagRepository.findMostPopularTags(pageable).forEach(tag -> popularTags.add(GameTagDto.fromEntity((GameTag) tag[0])));
+        log.info("Récupération des tags les plus populaires - page {}", pageable.getPageNumber());
+        return popularTags;
+    }
+
 }

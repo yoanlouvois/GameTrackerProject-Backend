@@ -3,7 +3,6 @@ package com.et4.gametrackerproject.controller;
 import com.et4.gametrackerproject.controller.api.DailyGameSessionApi;
 import com.et4.gametrackerproject.dto.DailyGameSessionDto;
 import com.et4.gametrackerproject.dto.UserDto;
-import com.et4.gametrackerproject.model.User;
 import com.et4.gametrackerproject.services.DailyGameSessionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RestController;
@@ -44,13 +43,13 @@ public class DailyGameSessionController implements DailyGameSessionApi {
     }
 
     @Override
-    public DailyGameSessionDto getSessionByUserAndDate(User user, Instant date) {
-        return dailyGameSessionService.getSessionByUserAndDate(user, date);
+    public DailyGameSessionDto getSessionByUserAndDate(Integer userId, Instant date) {
+        return dailyGameSessionService.getSessionByUserAndDate(userId, date);
     }
 
     @Override
-    public List<DailyGameSessionDto> getSessionsForUser(User user) {
-        return dailyGameSessionService.getSessionsForUser(user);
+    public List<DailyGameSessionDto> getSessionsForUser(Integer userId) {
+        return dailyGameSessionService.getSessionsForUser(userId);
     }
 
     @Override
@@ -75,38 +74,38 @@ public class DailyGameSessionController implements DailyGameSessionApi {
     }
 
     @Override
-    public Integer calculateTotalPlaytimeByUser(User user) {
-        return dailyGameSessionService.calculateTotalPlaytimeByUser(user);
+    public Integer calculateTotalPlaytimeByUser(Integer userId) {
+        return dailyGameSessionService.calculateTotalPlaytimeByUser(userId);
     }
 
     @Override
-    public Integer calculatePlaytimeByUserInPeriod(User user, Instant startDate, Instant endDate) {
-        return dailyGameSessionService.calculatePlaytimeByUserInPeriod(user, startDate, endDate);
+    public Integer calculatePlaytimeByUserInPeriod(Integer userId, Instant startDate, Instant endDate) {
+        return dailyGameSessionService.calculatePlaytimeByUserInPeriod(userId, startDate, endDate);
     }
 
     @Override
-    public Long countSessionsByUser(User user) {
-        return dailyGameSessionService.countSessionsByUser(user);
+    public Long countSessionsByUser(Integer userId) {
+        return dailyGameSessionService.countSessionsByUser(userId);
     }
 
     @Override
-    public Integer countGamesPlayedByUser(User user) {
-        return dailyGameSessionService.countGamesPlayedByUser(user);
+    public Integer countGamesPlayedByUser(Integer userId) {
+        return dailyGameSessionService.countGamesPlayedByUser(userId);
     }
 
     @Override
-    public DailyGameSessionDto getLongestSessionForUser(User user) {
-        return dailyGameSessionService.getLongestSessionForUser(user);
+    public DailyGameSessionDto getLongestSessionForUser(Integer userId) {
+        return dailyGameSessionService.getLongestSessionForUser(userId);
     }
 
     @Override
-    public List<DailyGameSessionDto> getRecentSessionsForUser(User user, int limit) {
-        return dailyGameSessionService.getRecentSessionsForUser(user, limit);
+    public List<DailyGameSessionDto> getRecentSessionsForUser(Integer userId, int limit) {
+        return dailyGameSessionService.getRecentSessionsForUser(userId, limit);
     }
 
     @Override
-    public Double calculateAveragePlaytimeByUser(User user) {
-        return dailyGameSessionService.calculateAveragePlaytimeByUser(user);
+    public Double calculateAveragePlaytimeByUser(Integer userId) {
+        return dailyGameSessionService.calculateAveragePlaytimeByUser(userId);
     }
 
 

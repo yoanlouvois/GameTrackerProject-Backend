@@ -33,7 +33,7 @@ public class MessageController implements MessageApi {
 
     @Override
     public void deleteMessage(Integer messageId) {
-        messageService.deleteMessage(messageId);
+        messageService.deleteMessageById(messageId);
     }
 
     @Override

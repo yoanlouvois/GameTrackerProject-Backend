@@ -1,8 +1,6 @@
 package com.et4.gametrackerproject.repository;
 
-import com.et4.gametrackerproject.dto.UserDto;
 import com.et4.gametrackerproject.model.DailyGameSession;
-import com.et4.gametrackerproject.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -15,10 +13,12 @@ public interface DailyGameSessionRepository extends JpaRepository<DailyGameSessi
 
     //=============================================Recherche==========================================
     List<DailyGameSession> findByDate(Instant date);
-    List<DailyGameSession> findByUser(User user);
 
-    @Query("SELECT d FROM DailyGameSession d WHERE d.user.id = :#{#user.id} AND d.date = :date")
-    Optional<DailyGameSession> findByUserAndDate(@Param("user") UserDto user, @Param("date") Instant date);
+    @Query("SELECT d FROM DailyGameSession d WHERE d.user.id = :userId")
+    List<DailyGameSession> findByUser(Integer userId);
+
+    @Query("SELECT d FROM DailyGameSession d WHERE d.user.id = :userId AND d.date = :date")
+    Optional<DailyGameSession> findByUserAndDate(@Param("userId") Integer userId, @Param("date") Instant date);
 
     @Query("SELECT d FROM DailyGameSession d WHERE d.user.id = :userId AND d.date BETWEEN :start AND :end")
     List<DailyGameSession> findByUserBetweenDates(@Param("userId") Integer userId,
@@ -26,12 +26,12 @@ public interface DailyGameSessionRepository extends JpaRepository<DailyGameSessi
                                                   @Param("end") Instant end);
 
     // Récupérer la session avec le plus de temps de jeu pour un utilisateur
-    @Query("SELECT d FROM DailyGameSession d WHERE d.user = :user ORDER BY d.totalTimePlayed DESC")
-    List<DailyGameSession> findLongestSessionsByUser(@Param("user") User user);
+    @Query("SELECT d FROM DailyGameSession d WHERE d.user.id = :userId ORDER BY d.totalTimePlayed DESC")
+    List<DailyGameSession> findLongestSessionsByUser(@Param("userId") Integer userId);
 
     // Récupérer les N dernières sessions d'un utilisateur
     @Query("SELECT d FROM DailyGameSession d WHERE d.user = :user ORDER BY d.date DESC")
-    List<DailyGameSession> findRecentSessionsByUser(@Param("user") User user);
+    List<DailyGameSession> findRecentSessionsByUser(@Param("userId") Integer userId);
 
     // Récupérer les utilisateurs les plus actifs (en termes de temps de jeu total)
     @Query("SELECT d.user, SUM(d.totalTimePlayed) as totalTime FROM DailyGameSession d GROUP BY d.user ORDER BY totalTime DESC")
@@ -44,29 +44,27 @@ public interface DailyGameSessionRepository extends JpaRepository<DailyGameSessi
     //=============================================CALCULS==========================================
 
     // Calcul du temps de jeu total pour un utilisateur
-    @Query("SELECT SUM(d.totalTimePlayed) FROM DailyGameSession d WHERE d.user = :user")
-    Integer calculateTotalPlaytimeByUser(@Param("user") User user);
+    @Query("SELECT SUM(d.totalTimePlayed) FROM DailyGameSession d WHERE d.user.id = :userId")
+    Integer calculateTotalPlaytimeByUser(@Param("userId") Integer userId);
 
     // Calcul du temps de jeu total pour un utilisateur sur une période donnée
-    @Query("SELECT SUM(d.totalTimePlayed) FROM DailyGameSession d WHERE d.user = :user AND d.date BETWEEN :startDate AND :endDate")
+    @Query("SELECT SUM(d.totalTimePlayed) FROM DailyGameSession d WHERE d.user.id = :userId AND d.date BETWEEN :startDate AND :endDate")
     Integer calculatePlaytimeByUserInPeriod(
-            @Param("user") User user,
+            @Param("userId") Integer userId,
             @Param("startDate") Instant startDate,
             @Param("endDate") Instant endDate
     );
 
     // Obtenir le nombre total de sessions de jeu pour un utilisateur
-    @Query("SELECT COUNT(d) FROM DailyGameSession d WHERE d.user = :user")
-    Long countSessionsByUser(@Param("user") User user);
+    @Query("SELECT COUNT(d) FROM DailyGameSession d WHERE d.user.id = :userId")
+    Long countSessionsByUser(@Param("userId") Integer userId);
 
     // Obtenir le nombre total de jeux joués par un utilisateur
-    @Query("SELECT SUM(d.gamesPlayed) FROM DailyGameSession d WHERE d.user = :user")
-    Integer countGamesPlayedByUser(@Param("user") User user);
+    @Query("SELECT COUNT(d.gamesPlayed) FROM DailyGameSession d WHERE d.user.id = :userId")
+    Integer countGamesPlayedByUser(@Param("userId") Integer userId);
 
     // Calculer la moyenne quotidienne de jeu pour un utilisateur
-    @Query("SELECT AVG(d.totalTimePlayed) FROM DailyGameSession d WHERE d.user = :user")
-    Double calculateAveragePlaytimeByUser(@Param("user") User user);
-
-
+    @Query("SELECT AVG(d.gamesPlayed) FROM DailyGameSession d WHERE d.user.id = :userId")
+    Double calculateAveragePlaytimeByUser(@Param("userId") Integer userId);
 
 }

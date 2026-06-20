@@ -21,6 +21,27 @@ import static com.et4.gametrackerproject.utils.Constants.APP_ROOT;
 @Tag(name = "Achievements", description = "Operations related to achievements")
 public interface AchievementApi {
 
+    @PostMapping(value = APP_ROOT + "/achievements/create", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Enregistre un achievement", description = "Enregistre un achievement")
+    @ApiResponse(responseCode = "200", description = "L'achievement a été enregistré")
+    AchievementDto createAchievement(@RequestBody AchievementDto achievementDto);
+
+    @PutMapping(value = APP_ROOT + "/achievements/update/{idAchievement}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Modifie un achievement", description = "Modifie un achievement")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "L'achievement a été modifié"),
+            @ApiResponse(responseCode = "404", description = "Aucun achievement n'a été trouvé avec cet id")
+    })
+    AchievementDto updateAchievement(@PathVariable("idAchievement") Integer id, @RequestBody AchievementDto achievementDto);
+
+    @DeleteMapping(value = APP_ROOT + "/achievements/delete/{idAchievement}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Supprime un achievement", description = "Supprime un achievement")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "L'achievement a été supprimé"),
+            @ApiResponse(responseCode = "404", description = "Aucun achievement n'a été trouvé avec cet id")
+    })
+    void deleteAchievement(@PathVariable("idAchievement") Integer id);
+
     @GetMapping( value = APP_ROOT+"/achievements/all", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Renvoie la liste des achievements", description = "Renvoie la liste des achievements")
     @ApiResponses(value = {
@@ -60,19 +81,6 @@ public interface AchievementApi {
             @ApiResponse(responseCode = "404", description = "Aucun achievement actif n'a été trouvé dans la BDD")
     })
     List<AchievementDto> getActiveAchievements();
-
-    @PostMapping(value = APP_ROOT + "/achievements/create", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Enregistre un achievement", description = "Enregistre un achievement")
-    @ApiResponse(responseCode = "200", description = "L'achievement a été enregistré")
-    AchievementDto createAchievement(@RequestBody AchievementDto achievementDto);
-
-    @PutMapping(value = APP_ROOT + "/achievements/update/{idAchievement}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Modifie un achievement", description = "Modifie un achievement")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "L'achievement a été modifié"),
-            @ApiResponse(responseCode = "404", description = "Aucun achievement n'a été trouvé avec cet id")
-    })
-    AchievementDto updateAchievement(@PathVariable("idAchievement") Integer id, @RequestBody AchievementDto achievementDto);
 
     @GetMapping(value = APP_ROOT + "/achievements/secrets", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Renvoie la liste des achievements secrets", description = "Renvoie la liste des achievements secrets")

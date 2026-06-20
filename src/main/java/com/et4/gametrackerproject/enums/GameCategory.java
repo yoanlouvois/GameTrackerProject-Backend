@@ -7,4 +7,6 @@ public enum GameCategory {
     BOARD,
     CARD,
     CASINO,
+    RPG,
+    STRATEGY,
 }

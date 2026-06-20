@@ -33,7 +33,7 @@ public class GameProgressController implements GameProgressApi {
 
     @Override
     public void deleteProgress(Integer progressId) {
-        gameProgressService.deleteProgress(progressId);
+        gameProgressService.deleteGameProgressById(progressId);
     }
 
     @Override

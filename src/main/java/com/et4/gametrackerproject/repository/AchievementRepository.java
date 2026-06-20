@@ -27,4 +27,8 @@ public interface AchievementRepository extends JpaRepository<Achievement, Intege
     List<Achievement> findByIsActiveTrue();
 
     List<Achievement> findByIsSecretTrue();
+
+    //trouver des achievement avec le userAchievementId
+    @Query("SELECT a FROM Achievement a JOIN UserAchievement ua ON a.id = ua.achievement.id WHERE ua.id = :userAchievementId")
+    Optional<Achievement> findByUserAchievementId(@Param("userAchievementId") Integer userAchievementId);
 }

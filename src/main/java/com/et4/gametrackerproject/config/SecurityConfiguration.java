@@ -13,12 +13,17 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.filter.CorsFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
 
 import static com.et4.gametrackerproject.utils.Constants.APP_ROOT;
+import static org.springframework.http.HttpHeaders.*;
 
 @Configuration
 @EnableWebSecurity
@@ -29,6 +34,9 @@ public class SecurityConfiguration {
 
     @Autowired
     private JwtRequestFilter jwtRequestFilter;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -46,7 +54,15 @@ public class SecurityConfiguration {
                                 "/configuration/security",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
+                                "/swagger-ui/index.html",
                                 "/webjars/**",
+                                "/gametracker/v1/users/create",
+                                "/gametracker/v1/game/create",
+                                "/gametracker/v1/game/{gameId}",
+                                "/gametracker/v1/game/name/{gameName}",
+                                "/gametracker/v1/game/{id}/update",
+                                "/gametracker/v1/game/newest",
+                                "/gametracker/v1/game/delete/**",
                                 "/v3/api-docs/**").permitAll()
 
                         .anyRequest().authenticated()
@@ -64,7 +80,7 @@ public class SecurityConfiguration {
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider daoProvider = new DaoAuthenticationProvider();
         daoProvider.setUserDetailsService(applicationUserDetailsService);
-        daoProvider.setPasswordEncoder(passwordEncoder());
+        daoProvider.setPasswordEncoder(passwordEncoder);
         return daoProvider;
     }
 
@@ -74,7 +90,19 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+    public CorsFilter corsFilter(){
+        final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        final CorsConfiguration config = new CorsConfiguration();
+        config.setAllowCredentials(true);
+        config.addAllowedOriginPattern("*");
+        config.setAllowedHeaders(Arrays.asList(
+                ORIGIN,
+                CONTENT_TYPE,
+                ACCEPT,
+                AUTHORIZATION
+        ));
+        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS","PATCH"));
+    source.registerCorsConfiguration("/**",config);
+    return new CorsFilter(source);
     }
 }

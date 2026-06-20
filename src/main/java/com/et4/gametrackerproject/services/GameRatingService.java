@@ -5,7 +5,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.time.Instant;
-import java.util.List;
 import java.util.Map;
 
 public interface GameRatingService {
@@ -13,7 +12,7 @@ public interface GameRatingService {
     //Opérations de base
     GameRatingDto submitRating(GameRatingDto ratingDto);
     GameRatingDto updateRating(Integer ratingId, Integer newRating);
-    void deleteRating(Integer ratingId);
+    void deleteRatingById(Integer ratingId);
 
     //Récupération des évaluations
     GameRatingDto getRatingById(Integer ratingId);
@@ -30,9 +29,6 @@ public interface GameRatingService {
     //Modération
     Page<GameRatingDto> getRecentRatings(Pageable pageable);
 
-    //Administration
-    void deleteAllRatingsForGame(Integer gameId);
-    void deleteAllRatingsForUser(Integer userId);
     Page<GameRatingDto> searchRatings(String searchQuery, Pageable pageable);
 
     //Analyse

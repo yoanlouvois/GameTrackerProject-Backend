@@ -3,14 +3,13 @@ package com.et4.gametrackerproject.repository;
 import com.et4.gametrackerproject.enums.DifficultyLevel;
 import com.et4.gametrackerproject.enums.GameCategory;
 import com.et4.gametrackerproject.model.Game;
+import com.et4.gametrackerproject.model.GameComment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -19,6 +18,10 @@ public interface GameRepository extends JpaRepository<Game,Integer> {
 
     // Recherches de base
     Optional<Game> findByUrl(String url);
+
+    // Récupération de l'URL de l'image d'un jeu
+    @Query("SELECT g.imageUrl FROM Game g WHERE g.id = :id")
+    String findImageUrlById(@Param("id") Integer id);
 
     List<Game> findByName(String name);
 
@@ -81,4 +84,50 @@ public interface GameRepository extends JpaRepository<Game,Integer> {
             "ORDER BY g.playCount DESC")
     List<Game> findMostPopularGamesByCategory(@Param("category") GameCategory category, Pageable pageable);
 
+    // Recherche des jeux par ID favoris
+    @Query("SELECT g FROM Game g " +
+            "JOIN FavoriteGame f ON g.id = f.game.id " +
+            "WHERE f.id = :favoriteId")
+    Optional<Game> findByFavoriteId(Integer favoriteId);
+
+    // Recherche des jeux par ID de GameComment
+    @Query("SELECT g FROM Game g " +
+            "JOIN GameComment gc ON g.id = gc.game.id " +
+            "WHERE gc.id = :commentId")
+    Optional<Game> findByGameCommentId(Integer commentId);
+
+
+    // Recherche des jeux par ID de GameRecommendationId
+    @Query("SELECT g FROM Game g " +
+            "JOIN GameRecommendation gr ON g.id = gr.game.id " +
+            "WHERE gr.id = :recommendationId")
+    Optional<Game> findByGameLeaderboardId(Integer entryId);
+
+    // Recherche des jeux par ID de GameProgressId
+    @Query("SELECT g FROM Game g " +
+            "JOIN GameProgress gp ON g.id = gp.game.id " +
+            "WHERE gp.id = :progressId")
+    Optional<Game> findByGameProgressId(Integer progressId);
+
+    // Recherche des jeux par ID de GameRating
+    @Query("SELECT g FROM Game g " +
+            "JOIN GameRating gr ON g.id = gr.game.id " +
+            "WHERE gr.id = :ratingId")
+    Optional<Game> findByGameRatingId(Integer ratingId);
+
+    // Recherche des jeux par ID de GameRecommendationId
+    @Query("SELECT g FROM Game g " +
+            "JOIN GameRecommendation gr ON g.id = gr.game.id " +
+            "WHERE gr.id = :recommendationId")
+    Optional<Game> findByGameRecommendationId(Integer recommendationId);
+
+    // Recherche des jeux par ID de Game
+    @Query("SELECT g FROM Game g " +
+            "JOIN GameTag gt ON g.id = gt.game.id " +
+            "WHERE gt.id = :tagId")
+    Optional<GameComment> findByGameId(Integer id);
+
+    //trouver le jeu par GameTagId
+    @Query("SELECT g FROM Game g JOIN g.tags gt WHERE gt.id = :gameTagId")
+    Optional<Game> findByGameTagId(@Param("gameTagId") Integer gameTagId);
 }

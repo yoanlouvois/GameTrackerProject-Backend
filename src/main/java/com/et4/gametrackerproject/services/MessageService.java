@@ -6,14 +6,13 @@ import org.springframework.data.domain.Pageable;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Map;
 
 public interface MessageService {
 
     //Opérations de base
     MessageDto sendMessage(MessageDto messageDto);
     MessageDto updateMessageContent(Integer messageId, String newContent);
-    void deleteMessage(Integer messageId);
+    void deleteMessageById(Integer messageId);
 
     //Récupération
     MessageDto getMessageById(Integer messageId);

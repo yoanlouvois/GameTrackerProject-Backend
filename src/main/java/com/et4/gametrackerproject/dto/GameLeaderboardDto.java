@@ -3,13 +3,15 @@ package com.et4.gametrackerproject.dto;
 import com.et4.gametrackerproject.enums.LeaderboardPeriod;
 import com.et4.gametrackerproject.model.GameLeaderboard;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 
 import java.time.Instant;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode
 public class GameLeaderboardDto {
     private Integer id;
 

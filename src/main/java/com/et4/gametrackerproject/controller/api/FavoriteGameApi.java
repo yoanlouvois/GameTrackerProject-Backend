@@ -66,15 +66,6 @@ public interface FavoriteGameApi {
     })
     FavoriteGameDto getFavoriteById(@PathVariable Integer favoriteId);
 
-    // Gestion des listes
-
-    @DeleteMapping(value = APP_ROOT + "/favorites/clear/{userId}")
-    @Operation(summary = "Supprimer tous les jeux favoris d'un utilisateur", description = "Supprimer tous les jeux favoris d'un utilisateur")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Tous les jeux favoris ont été supprimés"),
-            @ApiResponse(responseCode = "404", description = "Aucun jeu favori n'a été trouvé pour cet utilisateur")
-    })
-    void clearUserFavorites(@PathVariable Integer userId);
 
     //Statistiques
 
@@ -138,14 +129,7 @@ public interface FavoriteGameApi {
     })
     Long countFavoritesByUser(@PathVariable Integer userId);
 
-    //Supprimer un jeu favori pour un utilisateur spécifique
-    @DeleteMapping(value = APP_ROOT + "/favorites/delete/{userId}/{gameId}")
-    @Operation(summary = "Supprimer un jeu favori pour un utilisateur spécifique", description = "Supprimer un jeu favori pour un utilisateur spécifique")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Le jeu favori a été supprimé"),
-            @ApiResponse(responseCode = "404", description = "Aucun jeu favori n'a été trouvé pour cet utilisateur")
-    })
-    void deleteFavoriteByUserAndGame(@PathVariable Integer userId, @PathVariable Integer gameId);
+
 
 
 }

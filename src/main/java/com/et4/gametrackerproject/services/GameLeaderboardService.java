@@ -1,14 +1,12 @@
 package com.et4.gametrackerproject.services;
 
 import com.et4.gametrackerproject.dto.GameLeaderboardDto;
-import com.et4.gametrackerproject.dto.UserDto;
 import com.et4.gametrackerproject.enums.LeaderboardPeriod;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 public interface GameLeaderboardService {
@@ -16,12 +14,10 @@ public interface GameLeaderboardService {
     //Opérations de base
     GameLeaderboardDto submitScore(GameLeaderboardDto scoreEntry);
     GameLeaderboardDto updateScore(Integer entryId, Integer newScore);
-    void deleteScoreEntry(Integer entryId);
+    void deleteGameLeaderBoardById(Integer entryId);
 
     //Récupération des classements
     Page<GameLeaderboardDto> getLeaderboardForGame(Integer gameId, LeaderboardPeriod period, Pageable pageable);
-
-    void resetLeaderboard(Integer gameId, LeaderboardPeriod period);
 
 
     Page<GameLeaderboardDto> getLeaderboardByPeriod(LeaderboardPeriod period, Pageable pageable);

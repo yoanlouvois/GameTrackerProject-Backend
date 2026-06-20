@@ -7,6 +7,7 @@ import com.et4.gametrackerproject.enums.ReportType;
 import com.et4.gametrackerproject.exception.EntityNotFoundException;
 import com.et4.gametrackerproject.exception.ErrorCodes;
 import com.et4.gametrackerproject.exception.InvalidEntityException;
+import com.et4.gametrackerproject.exception.InvalidOperationException;
 import com.et4.gametrackerproject.model.Report;
 import com.et4.gametrackerproject.model.User;
 import com.et4.gametrackerproject.repository.ReportRepository;
@@ -22,6 +23,7 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -91,7 +93,13 @@ public class ReportServiceImpl implements ReportService {
 
         log.info("Report deleted");
 
-        // TODO : Ajouter si besoin de supprimer des relations avant de supprimer le rapport
+        Optional<User> users = userRepository.findByReportId(reportId);
+        if (users.isPresent()) {
+            log.error("Impossible de supprimer le report avec l'ID {} car il est référencé par un user", reportId);
+            throw new InvalidOperationException("Impossible de supprimer le report car il est référencé par un user",
+                    ErrorCodes.REPORT_ALREADY_USED);
+        }
+
         reportRepository.deleteById(reportId);
     }
 

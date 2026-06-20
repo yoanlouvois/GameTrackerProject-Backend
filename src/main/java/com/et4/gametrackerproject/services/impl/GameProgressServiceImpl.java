@@ -4,6 +4,7 @@ import com.et4.gametrackerproject.dto.GameProgressDto;
 import com.et4.gametrackerproject.enums.GameStatus;
 import com.et4.gametrackerproject.exception.EntityNotFoundException;
 import com.et4.gametrackerproject.exception.ErrorCodes;
+import com.et4.gametrackerproject.exception.InvalidOperationException;
 import com.et4.gametrackerproject.model.Game;
 import com.et4.gametrackerproject.model.GameProgress;
 import com.et4.gametrackerproject.model.User;
@@ -11,8 +12,6 @@ import com.et4.gametrackerproject.repository.GameProgressRepository;
 import com.et4.gametrackerproject.repository.GameRepository;
 import com.et4.gametrackerproject.repository.UserRepository;
 import com.et4.gametrackerproject.services.GameProgressService;
-import com.et4.gametrackerproject.services.GameService;
-import com.et4.gametrackerproject.services.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -21,6 +20,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -33,7 +33,7 @@ public class GameProgressServiceImpl implements GameProgressService {
     private final UserRepository userRepository;
     private final GameRepository gameRepository;
 
-    public GameProgressServiceImpl(GameProgressRepository gameProgressRepository, UserService userService, GameService gameService, UserRepository userRepository, GameRepository gameRepository) {
+    public GameProgressServiceImpl(GameProgressRepository gameProgressRepository, UserRepository userRepository, GameRepository gameRepository) {
         this.gameProgressRepository = gameProgressRepository;
         this.userRepository = userRepository;
         this.gameRepository = gameRepository;
@@ -67,26 +67,16 @@ public class GameProgressServiceImpl implements GameProgressService {
             // Création d'une nouvelle progression
             progress = GameProgressDto.toEntity(progressDto);
         }
-        // Mise à jour de la date de dernière modification (ici on utilise lastPlayed comme indicateur)
+        // Mise à jour de la date de dernière modification (ici, on utilise lastPlayed comme indicateur)
         progress.setLastPlayed(Instant.now());
         GameProgress saved = gameProgressRepository.save(progress);
         return GameProgressDto.fromEntity(saved);
     }
 
-    @Override
-    public GameProgressDto getProgressById(Integer progressId) {
-        // Vérifie que l'ID n'est pas null et renvoie le DTO correspondant à l'entité trouvée
-        if (progressId == null) {
-            throw new IllegalArgumentException("L'ID de la progression ne peut être null");
-        }
-        GameProgress progress = gameProgressRepository.findById(progressId)
-                .orElseThrow(() -> new EntityNotFoundException("Progression non trouvée avec l'ID "
-                        + progressId, ErrorCodes.GAME_PROGRESS_NOT_FOUND));
-        return GameProgressDto.fromEntity(progress);
-    }
+
 
     @Override
-    public void deleteProgress(Integer progressId) {
+    public void deleteGameProgressById(Integer progressId) {
         // Vérifie que l'ID n'est pas null et supprime l'entité correspondante
         if (progressId == null) {
             throw new IllegalArgumentException("L'ID de la progression ne peut être null");
@@ -94,10 +84,23 @@ public class GameProgressServiceImpl implements GameProgressService {
         GameProgress progress = gameProgressRepository.findById(progressId)
                 .orElseThrow(() -> new EntityNotFoundException("Progression non trouvée avec l'ID "
                         + progressId, ErrorCodes.GAME_PROGRESS_NOT_FOUND));
+
+        Optional<Game> games = gameRepository.findByGameProgressId(progressId);
+        if (games.isPresent()) {
+            log.error("Impossible de supprimer l'entrée de leaderboard avec l'ID {} car elle est utilisée par le jeu {}", progressId, games.get().getId());
+            throw new InvalidOperationException("Impossible de supprimer l'entrée de leaderboard car elle est utilisée par le jeu",
+                    ErrorCodes.GAME_PROGRESS_ALREADY_USED);
+        }
+
+        Optional<User> users = userRepository.findByGameProgressId(progressId);
+        if (users.isPresent()) {
+            log.error("Impossible de supprimer l'entrée de leaderboard avec l'ID {} car elle est utilisée par l'utilisateur {}", progressId, users.get().getId());
+            throw new InvalidOperationException("Impossible de supprimer l'entrée de leaderboard car elle est utilisée par l'utilisateur",
+                    ErrorCodes.GAME_PROGRESS_ALREADY_USED);
+        }
+
         gameProgressRepository.delete(progress);
     }
-
-
 
 
     @Override
@@ -179,6 +182,17 @@ public class GameProgressServiceImpl implements GameProgressService {
 
 
 
+    @Override
+    public GameProgressDto getProgressById(Integer progressId) {
+        // Vérifie que l'ID n'est pas null et renvoie le DTO correspondant à l'entité trouvée
+        if (progressId == null) {
+            throw new IllegalArgumentException("L'ID de la progression ne peut être null");
+        }
+        GameProgress progress = gameProgressRepository.findById(progressId)
+                .orElseThrow(() -> new EntityNotFoundException("Progression non trouvée avec l'ID "
+                        + progressId, ErrorCodes.GAME_PROGRESS_NOT_FOUND));
+        return GameProgressDto.fromEntity(progress);
+    }
 
     @Override
     public GameProgressDto resetProgress(Integer progressId) {
@@ -391,7 +405,7 @@ public class GameProgressServiceImpl implements GameProgressService {
                 .collect(Collectors.toList());
     }
 
-    // Compte le nombre de jeux par statut pour un utilisateur et retourne une Map (statut -> nombre).
+    // Compte le nombre de jeux par statut pour un utilisateur et retourne une Map (statut → nombre).
     @Override
     public Map<GameStatus, Long> countGamesByStatusForUser(Integer userId) {
         if (userId == null) {

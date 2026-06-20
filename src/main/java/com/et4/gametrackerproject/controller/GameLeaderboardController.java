@@ -2,7 +2,6 @@ package com.et4.gametrackerproject.controller;
 
 import com.et4.gametrackerproject.controller.api.GameLeaderboardApi;
 import com.et4.gametrackerproject.dto.GameLeaderboardDto;
-import com.et4.gametrackerproject.dto.UserDto;
 import com.et4.gametrackerproject.enums.LeaderboardPeriod;
 import com.et4.gametrackerproject.services.GameLeaderboardService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +11,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -38,17 +36,12 @@ public class GameLeaderboardController implements GameLeaderboardApi {
 
     @Override
     public void deleteScoreEntry(Integer entryId) {
-        gameLeaderboardService.deleteScoreEntry(entryId);
+        gameLeaderboardService.deleteGameLeaderBoardById(entryId);
     }
 
     @Override
     public Page<GameLeaderboardDto> getLeaderboardForGame(Integer gameId, LeaderboardPeriod period, Pageable pageable) {
         return gameLeaderboardService.getLeaderboardForGame(gameId, period, pageable);
-    }
-
-    @Override
-    public void resetLeaderboard(Integer gameId, LeaderboardPeriod period) {
-        gameLeaderboardService.resetLeaderboard(gameId, period);
     }
 
     @Override

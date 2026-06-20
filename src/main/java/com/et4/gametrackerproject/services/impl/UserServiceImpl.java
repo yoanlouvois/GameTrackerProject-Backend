@@ -1,5 +1,6 @@
 package com.et4.gametrackerproject.services.impl;
 
+import com.et4.gametrackerproject.dto.ChangerMdpUserDto;
 import com.et4.gametrackerproject.dto.UserDto;
 import com.et4.gametrackerproject.enums.FriendshipStatus;
 import com.et4.gametrackerproject.enums.OnlineStatus;
@@ -8,19 +9,21 @@ import com.et4.gametrackerproject.enums.ScreenTheme;
 import com.et4.gametrackerproject.exception.EntityNotFoundException;
 import com.et4.gametrackerproject.exception.ErrorCodes;
 import com.et4.gametrackerproject.exception.InvalidEntityException;
-import com.et4.gametrackerproject.model.User;
-import com.et4.gametrackerproject.repository.AvatarRepository;
-import com.et4.gametrackerproject.repository.FriendshipRepository;
-import com.et4.gametrackerproject.repository.UserRepository;
+import com.et4.gametrackerproject.exception.InvalidOperationException;
+import com.et4.gametrackerproject.model.*;
+import com.et4.gametrackerproject.repository.*;
 import com.et4.gametrackerproject.services.UserService;
 import com.et4.gametrackerproject.validator.UserValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -29,23 +32,38 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final AvatarRepository avatarRepository;
     private final FriendshipRepository friendshipRepository;
+    private final FavoriteGameRepository favoriteGameRepository;
+    private final UserSanctionRepository userSanctionRepository;
+    private final GameRecommendationRepository gameRecommendationRepository;
+    private final MessageRepository messageRepository;
+    private final ReportRepository reportRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public UserServiceImpl(UserRepository userRepository, AvatarRepository avatarRepository, FriendshipRepository friendshipRepository) {
+    public UserServiceImpl(UserRepository userRepository, AvatarRepository avatarRepository, FriendshipRepository friendshipRepository, FavoriteGameRepository favoriteGameRepository, UserSanctionRepository userSanctionRepository, GameRecommendationRepository gameRecommendationRepository, MessageRepository messageRepository, ReportRepository reportRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.avatarRepository = avatarRepository;
         this.friendshipRepository = friendshipRepository;
+        this.favoriteGameRepository = favoriteGameRepository;
+        this.userSanctionRepository = userSanctionRepository;
+        this.gameRecommendationRepository = gameRecommendationRepository;
+        this.messageRepository = messageRepository;
+        this.reportRepository = reportRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
     public UserDto createUser(UserDto userDto) {
         List<String> errors = UserValidator.validate(userDto);
         if (!errors.isEmpty()) {
-            log.error("User is not valid: {}", errors);
+            log.error("User invalide: {}", errors);
             throw new InvalidEntityException("User is not valid", ErrorCodes.USER_NOT_VALID,errors);
         }
 
         log.info("Create User {}", userDto);
+
+        String encodedPassword = passwordEncoder.encode(userDto.getPassword());
+        userDto.setPassword(encodedPassword);
 
         return UserDto.fromEntity(userRepository.save(UserDto.toEntity(userDto)));
     }
@@ -58,7 +76,7 @@ public class UserServiceImpl implements UserService {
             throw new InvalidEntityException("User is not valid", ErrorCodes.USER_NOT_VALID, errors);
         }
         if(!userRepository.existsById(userId)) {
-            log.error("User with id {} not found", userId);
+            log.error("User non trouvé avec l'id {}", userId);
             throw new EntityNotFoundException("User with id " + userId + " not found", ErrorCodes.USER_NOT_FOUND);
         }
         if(!userId.equals(userDto.getId())) {
@@ -67,6 +85,20 @@ public class UserServiceImpl implements UserService {
         }
 
         log.info("Update User {}", userDto);
+
+        UserDto user = userRepository.findById(userId)
+                .map(UserDto::fromEntity)
+                .orElseThrow(() -> new EntityNotFoundException("User with id " + userId + " not found", ErrorCodes.USER_NOT_FOUND));
+
+        // Ne faites rien si le champ du mot de passe est vide lors de la mise à jour
+        if (StringUtils.hasText(userDto.getPassword())) {
+            // Un nouveau mot de passe a été fourni, hachez-le
+            String encodedPassword = passwordEncoder.encode(userDto.getPassword());
+            userDto.setPassword(encodedPassword);
+        } else {
+            // Aucun nouveau mot de passe fourni, conservez l'ancien
+            userDto.setPassword(user.getPassword());
+        }
 
         return UserDto.fromEntity(userRepository.save(UserDto.toEntity(userDto)));
     }
@@ -82,9 +114,47 @@ public class UserServiceImpl implements UserService {
             throw new EntityNotFoundException("User with id " + userId + " not found", ErrorCodes.USER_NOT_FOUND);
         }
 
-        log.info("Delete User with id {}", userId);
+        Optional<FavoriteGame> favorites = favoriteGameRepository.findFavoriteGameByUserId(userId);
+        if (favorites.isPresent()) {
+            log.error("Cet utilisateur a des jeux favoris, impossible de le supprimer");
+            throw new InvalidOperationException("Cet utilisateur a des jeux favoris, impossible de le supprimer",
+                    ErrorCodes.USER_ALREADY_USED);
+        }
 
-        // TODO : Verifier que les relations de cet utilisateur sont bien supprimées avant de le supprimer
+        Optional<UserSanction> userSanctions = userSanctionRepository.findByUserId(userId);
+        if (userSanctions.isPresent()) {
+            log.error("Cet utilisateur a des sanctions, impossible de le supprimer");
+            throw new InvalidOperationException("Cet utilisateur a des sanctions, impossible de le supprimer",
+                    ErrorCodes.USER_ALREADY_USED);
+        }
+
+        Optional<GameRecommendation> gameRecommendations = gameRecommendationRepository.findByUserId(userId);
+        if (gameRecommendations.isPresent()) {
+            log.error("Cet utilisateur a des recommandations de jeux, impossible de le supprimer");
+            throw new InvalidOperationException("Cet utilisateur a des recommandations de jeux, impossible de le supprimer",
+                    ErrorCodes.USER_ALREADY_USED);
+        }
+
+        Optional<Message> messages = messageRepository.findByUserId(userId);
+        if (messages.isPresent()) {
+            log.error("Cet utilisateur a des messages, impossible de le supprimer");
+            throw new InvalidOperationException("Cet utilisateur a des messages, impossible de le supprimer",
+                    ErrorCodes.USER_ALREADY_USED);
+        }
+
+        Optional<Report> reports = reportRepository.findByUserId(userId);
+        if (reports.isPresent()) {
+            log.error("Cet utilisateur a des rapports, impossible de le supprimer");
+            throw new InvalidOperationException("Cet utilisateur a des rapports, impossible de le supprimer",
+                    ErrorCodes.USER_ALREADY_USED);
+        }
+
+        Optional<Friendship> friendships = friendshipRepository.findByUserId(userId);
+        if (friendships.isPresent()) {
+            log.error("Cet utilisateur a des amitiés, impossible de le supprimer");
+            throw new InvalidOperationException("Cet utilisateur a des amitiés, impossible de le supprimer",
+                    ErrorCodes.USER_ALREADY_USED);
+        }
         userRepository.deleteById(userId);
     }
 
@@ -139,7 +209,6 @@ public class UserServiceImpl implements UserService {
         return userRepository.findAll(pageable).map(UserDto::fromEntity);
     }
 
-    // TODO : Ajouter la logique de hashage du mot de passe et du choix de mot de passe
     @Override
     public void resetPassword(Integer userId, String newPassword) {
         if(userId == null) {
@@ -150,15 +219,16 @@ public class UserServiceImpl implements UserService {
             log.error("New password is null");
             throw new InvalidEntityException("New password is null", ErrorCodes.USER_NOT_VALID);
         }
-        if(!userRepository.existsById(userId)) {
-            log.error("User with id {} not found", userId);
-            throw new EntityNotFoundException("User with id " + userId + " not found", ErrorCodes.USER_NOT_FOUND);
-        }
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User with id " + userId + " not found", ErrorCodes.USER_NOT_FOUND));
 
         log.info("Reset password for User with id {}", userId);
 
-        // TODO : Hasher le mot de passe avant de le sauvegarder
-        userRepository.updateUserPassword(userId, newPassword);
+        String encodedPassword = passwordEncoder.encode(newPassword);
+        user.setPassword(encodedPassword);
+
+        userRepository.save(user);
+        log.info("Password reset successfully for User with id {}", userId);
     }
 
     @Override
@@ -463,5 +533,43 @@ public class UserServiceImpl implements UserService {
 
         // TODO : Exporter les données de l'utilisateur dans un fichier JSON
         return "";
+    }
+
+    @Override
+    public UserDto changerMdp(ChangerMdpUserDto dto) {
+        validate(dto);//verification entre le mot de passe et la confirmation
+        Optional<User> userOptional = userRepository.findById(dto.getId()) ;
+        if (userOptional.isEmpty()){
+            log.warn("Aucun user trouvé avec l'ID {}", dto.getId());
+            throw new EntityNotFoundException("Aucun user trouvé avec l'ID "+dto.getId(), ErrorCodes.USER_NOT_FOUND);
+        }
+        User user = userOptional.get();//recupération de l'utilisateur
+        String encodedPassword = passwordEncoder.encode(dto.getPassword());
+        user.setPassword(encodedPassword);//modification du mot de passe
+
+        return UserDto.fromEntity(userRepository.save(user));
+    }
+
+    private void validate(ChangerMdpUserDto dto) {
+        if(dto == null) {
+            log.warn("Impossible de modifier le mot de passe : ChangerMdpUserDto est null");
+            throw new InvalidEntityException("Aucune info n'a été fournie pour changer de mdp",
+                    ErrorCodes.USER_CHANGE_PASSWORD_OBJECT_NOT_VALID);
+        }
+        if(dto.getId() == null) {
+            log.warn("Impossible de modifier le mot de passe : L'ID de l'utilisateur est null");
+            throw new InvalidEntityException("L'ID de l'utilisateur est null",
+                    ErrorCodes.USER_CHANGE_PASSWORD_OBJECT_NOT_VALID);
+        }
+        if(!StringUtils.hasLength(dto.getPassword()) || !StringUtils.hasLength(dto.getConfirmPassword())) {
+            log.warn("Impossible de modifier le mot de passe : Le mot de passe ou la confirmation est null");
+            throw new InvalidEntityException("Le mot de passe ou la confirmation est null",
+                    ErrorCodes.USER_CHANGE_PASSWORD_OBJECT_NOT_VALID);
+        }
+        if (!dto.getPassword().equals((dto.getConfirmPassword()))) {
+            log.warn("Impossible de modifier le mot de passe : Le mot de passe et la confirmation ne correspondent pas");
+            throw new InvalidEntityException("Le mot de passe et la confirmation ne correspondent pas",
+                    ErrorCodes.USER_CHANGE_PASSWORD_OBJECT_NOT_VALID);
+        }
     }
 }

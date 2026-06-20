@@ -2,13 +2,15 @@ package com.et4.gametrackerproject.dto;
 
 import com.et4.gametrackerproject.model.Message;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 
 import java.time.Instant;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode
 public class MessageDto {
     private Integer id;
 
@@ -16,10 +18,8 @@ public class MessageDto {
 
     private Instant lastModifiedDate;
 
-    @JsonIgnore
     private UserDto sender;
 
-    @JsonIgnore
     private UserDto receiver;
 
     private String content;

@@ -6,15 +6,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.time.Instant;
-import java.util.List;
-import java.util.Map;
 
 public interface UserSanctionService {
 
     // Opérations de base
     UserSanctionDto applySanction(UserSanctionDto sanctionDto);
     UserSanctionDto updateSanction(Integer sanctionId, UserSanctionDto sanctionDto);
-    void removeSanction(Integer sanctionId);
+    void deleteSanction(Integer sanctionId);
 
     // Gestion du cycle de vie
     UserSanctionDto modifySanctionDuration(Integer sanctionId, Instant newEndDate);

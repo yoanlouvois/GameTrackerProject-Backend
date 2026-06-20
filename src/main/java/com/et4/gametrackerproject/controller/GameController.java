@@ -83,6 +83,11 @@ public class GameController implements GameApi {
     }
 
     @Override
+    public String getImageUrlByID(Integer id) {
+        return gameService.getImageUrlById(id);
+    }
+
+    @Override
     public List<Game> getGamesByName(String name) {
         return gameService.getGamesByName(name);
     }

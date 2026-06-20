@@ -4,9 +4,8 @@ import com.et4.gametrackerproject.dto.GameCommentDto;
 import com.et4.gametrackerproject.dto.UserDto;
 import com.et4.gametrackerproject.exception.EntityNotFoundException;
 import com.et4.gametrackerproject.exception.ErrorCodes;
-import com.et4.gametrackerproject.model.Game;
-import com.et4.gametrackerproject.model.GameComment;
-import com.et4.gametrackerproject.model.User;
+import com.et4.gametrackerproject.exception.InvalidOperationException;
+import com.et4.gametrackerproject.model.*;
 import com.et4.gametrackerproject.repository.GameCommentLikeRepository;
 import com.et4.gametrackerproject.repository.GameCommentRepository;
 import com.et4.gametrackerproject.repository.GameRepository;
@@ -22,6 +21,7 @@ import java.time.temporal.ChronoUnit;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -34,7 +34,7 @@ public class GameCommentServiceImpl implements GameCommentService {
     private final GameRepository gameRepository;
     private final UserRepository userRepository;
 
-    public GameCommentServiceImpl(GameCommentRepository gameCommentRepository, GameCommentLikeServiceImpl gameCommentLikeServiceImpl, GameCommentLikeRepository gameCommentLikeRepository, GameRepository gameRepository, UserRepository userRepository) {
+    public GameCommentServiceImpl(GameCommentRepository gameCommentRepository, GameCommentLikeRepository gameCommentLikeRepository, GameRepository gameRepository, UserRepository userRepository) {
         this.gameCommentRepository = gameCommentRepository;
         this.gameCommentLikeRepository = gameCommentLikeRepository;
         this.gameRepository = gameRepository;
@@ -89,6 +89,27 @@ public class GameCommentServiceImpl implements GameCommentService {
                 .orElseThrow(() -> new EntityNotFoundException("Commentaire non trouvé avec l'ID " + commentId, ErrorCodes.GAME_COMMENT_NOT_FOUND));
         gameCommentRepository.delete(comment);
         log.info("Commentaire avec l'ID {} supprimé", commentId);
+
+        Optional<User> users = userRepository.findByGameCommentId(commentId);
+        if (users.isPresent()) {
+            log.error("Impossible de supprimer le commentaire, l'utilisateur {} a des jeux favoris associés", users.get().getUsername());
+            throw new InvalidOperationException("Impossible de supprimer le commentaire, l'utilisateur a des jeux favoris associés",
+                    ErrorCodes.GAME_COMMENT_ALREADY_USED);
+        }
+
+        Optional<Game> games = gameRepository.findByGameCommentId(commentId);
+        if (games.isPresent()) {
+            log.error("Impossible de supprimer le commentaire, le jeu {} a des jeux favoris associés", games.get().getName());
+            throw new InvalidOperationException("Impossible de supprimer le commentaire, le jeu a des jeux favoris associés",
+                    ErrorCodes.GAME_COMMENT_ALREADY_USED);
+        }
+
+        Optional<GameCommentLike> gameCommentLikes = gameCommentLikeRepository.findByGameCommentId(commentId);
+        if (gameCommentLikes.isPresent()) {
+            log.error("Impossible de supprimer le commentaire, le jeu a des jeux favoris associés");
+            throw new InvalidOperationException("Impossible de supprimer le commentaire, le jeu a des jeux favoris associés",
+                    ErrorCodes.GAME_COMMENT_ALREADY_USED);
+        }
     }
 
     @Override
@@ -111,18 +132,6 @@ public class GameCommentServiceImpl implements GameCommentService {
         } else {
             log.warn("Aucune réponse trouvée pour le commentaire parent {}", parentCommentId);
         }
-    }
-
-
-    //============================GETTER =======================
-    @Override
-    public GameCommentDto getCommentById(Integer commentId) {
-        if (commentId == null) {
-            throw new IllegalArgumentException("L'ID du commentaire ne peut être null");
-        }
-        GameComment comment = gameCommentRepository.findById(commentId)
-                .orElseThrow(() -> new EntityNotFoundException("Commentaire non trouvé avec l'ID " + commentId, ErrorCodes.GAME_COMMENT_NOT_FOUND));
-        return GameCommentDto.fromEntity(comment);
     }
 
     @Override
@@ -150,6 +159,19 @@ public class GameCommentServiceImpl implements GameCommentService {
 
         return GameCommentDto.fromEntity(savedReply);
     }
+
+
+    //============================GETTER =======================
+    @Override
+    public GameCommentDto getCommentById(Integer commentId) {
+        if (commentId == null) {
+            throw new IllegalArgumentException("L'ID du commentaire ne peut être null");
+        }
+        GameComment comment = gameCommentRepository.findById(commentId)
+                .orElseThrow(() -> new EntityNotFoundException("Commentaire non trouvé avec l'ID " + commentId, ErrorCodes.GAME_COMMENT_NOT_FOUND));
+        return GameCommentDto.fromEntity(comment);
+    }
+
 
     @Override
     public Page<GameCommentDto> getCommentReplies(Integer parentCommentId, Pageable pageable) {

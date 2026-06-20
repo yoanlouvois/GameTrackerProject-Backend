@@ -12,6 +12,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 public interface MessageRepository extends JpaRepository<Message,Integer> {
 
@@ -119,4 +120,8 @@ public interface MessageRepository extends JpaRepository<Message,Integer> {
 
     @Query("SELECT m FROM Message m WHERE m.receiver = :user AND m.creationDate > :date")
     List<Message> findRecentMessages(@Param("user") User user,@Param("date") Instant date);
+
+    // Rechercher un message par son userId
+    @Query("SELECT m FROM Message m WHERE m.sender.id = :userId OR m.receiver.id = :userId")
+    Optional<Message> findByUserId(Integer userId);
 }

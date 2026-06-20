@@ -4,9 +4,11 @@ import com.et4.gametrackerproject.dto.DailyGameSessionDto;
 import com.et4.gametrackerproject.dto.UserDto;
 import com.et4.gametrackerproject.exception.EntityNotFoundException;
 import com.et4.gametrackerproject.exception.ErrorCodes;
+import com.et4.gametrackerproject.exception.InvalidOperationException;
 import com.et4.gametrackerproject.model.DailyGameSession;
 import com.et4.gametrackerproject.model.User;
 import com.et4.gametrackerproject.repository.DailyGameSessionRepository;
+import com.et4.gametrackerproject.repository.UserRepository;
 import com.et4.gametrackerproject.services.DailyGameSessionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,9 +24,11 @@ import java.util.stream.Collectors;
 public class DailyGameSessionServiceImpl implements DailyGameSessionService {
     private static final Logger log = LoggerFactory.getLogger(DailyGameSessionServiceImpl.class);
     private final DailyGameSessionRepository dailyGameSessionRepository;
+    private final UserRepository userRepository;
 
-    public DailyGameSessionServiceImpl(DailyGameSessionRepository dailyGameSessionRepository) {
+    public DailyGameSessionServiceImpl(DailyGameSessionRepository dailyGameSessionRepository, UserRepository userRepository) {
         this.dailyGameSessionRepository = dailyGameSessionRepository;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -52,11 +56,6 @@ public class DailyGameSessionServiceImpl implements DailyGameSessionService {
             log.error("Les données de mise à jour de la session sont null");
             throw new IllegalArgumentException("Les données de mise à jour ne peuvent être null");
         }
-        DailyGameSession existingSession = dailyGameSessionRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException(
-                        "Aucune session trouvée avec l'ID " + id,
-                        ErrorCodes.DAILY_GAME_SESSION_NOT_FOUND
-                ));
 
         // Mise à jour des champs de la session existante à partir du DTO
         // Ici, on choisit de remplacer les valeurs existantes par celles fournies dans le DTO.
@@ -77,8 +76,15 @@ public class DailyGameSessionServiceImpl implements DailyGameSessionService {
                         "Aucune session trouvée avec l'ID " + id,
                         ErrorCodes.DAILY_GAME_SESSION_NOT_FOUND
                 ));
+
+        // Vérification si la session est utilisée par un utilisateur
+        Optional<User> users = userRepository.findByDailyGameSessionId(id);
+        if (users.isPresent()) {
+            throw new InvalidOperationException("L'avatar est déjà utilisé par un utilisateur",
+                    ErrorCodes.DAILY_GAME_SESSION_ALREADY_IN_USE);
+        }
+
         dailyGameSessionRepository.delete(session);
-        log.info("Session supprimée avec succès pour l'ID : " + id);
     }
 
 
@@ -105,9 +111,6 @@ public class DailyGameSessionServiceImpl implements DailyGameSessionService {
             throw new IllegalArgumentException("La date ne peut être null");
         }
 
-        // On suppose que la méthode findByDate est déclarée dans le repository :
-        // @Query("SELECT d FROM DailyGameSession d WHERE d.date = :date")
-        // List<DailyGameSession> findByDate(@Param("date") Instant date);
         List<DailyGameSession> sessions = dailyGameSessionRepository.findByDate(date);
 
         if (sessions.isEmpty()) {
@@ -124,17 +127,17 @@ public class DailyGameSessionServiceImpl implements DailyGameSessionService {
     }
 
     @Override
-    public List<DailyGameSessionDto> getSessionsForUser(User user) {
-        if (user == null) {
+    public List<DailyGameSessionDto> getSessionsForUser(Integer userId) {
+        if (userId == null) {
             log.error("L'ID utilisateur est null");
             throw new IllegalArgumentException("L'ID utilisateur ne peut être null");
         }
 
-        List<DailyGameSession> sessions = dailyGameSessionRepository.findByUser(user);
+        List<DailyGameSession> sessions = dailyGameSessionRepository.findByUser(userId);
         if (sessions.isEmpty()) {
-            log.warn("Aucune session trouvée pour l'utilisateur : " + user.getUsername());
+            log.warn("Aucune session trouvée pour l'utilisateur : " + userId);
             throw new EntityNotFoundException(
-                    "Aucune session trouvée pour l'utilisateur " + user.getUsername(),
+                    "Aucune session trouvée pour l'utilisateur " + userId,
                     ErrorCodes.DAILY_GAME_SESSION_NOT_FOUND
             );
         }
@@ -145,17 +148,17 @@ public class DailyGameSessionServiceImpl implements DailyGameSessionService {
     }
 
     @Override
-    public DailyGameSessionDto getSessionByUserAndDate(User user, Instant date) {
-        if (user == null || date == null) {
+    public DailyGameSessionDto getSessionByUserAndDate(Integer userId, Instant date) {
+        if (userId == null || date == null) {
             log.error("L'ID utilisateur ou la date sont null");
             throw new IllegalArgumentException("L'ID utilisateur et la date doivent être fournis");
         }
 
-        Optional<DailyGameSession> session = dailyGameSessionRepository.findByUserAndDate(UserDto.fromEntity(user), date);
+        Optional<DailyGameSession> session = dailyGameSessionRepository.findByUserAndDate(userId, date);
         return session
                 .map(DailyGameSessionDto::fromEntity)
                 .orElseThrow(() -> new EntityNotFoundException(
-                        "Aucune session trouvée pour l'utilisateur " + user.getId() + " à la date " + date,
+                        "Aucune session trouvée pour l'utilisateur " + userId+ " à la date " + date,
                         ErrorCodes.DAILY_GAME_SESSION_NOT_FOUND
                 ));
     }
@@ -182,16 +185,16 @@ public class DailyGameSessionServiceImpl implements DailyGameSessionService {
     }
 
     @Override
-    public DailyGameSessionDto getLongestSessionForUser(User user) {
-        if (user == null) {
+    public DailyGameSessionDto getLongestSessionForUser(Integer userId) {
+        if (userId == null) {
             log.error("L'utilisateur est null");
             throw new IllegalArgumentException("L'utilisateur ne peut être null");
         }
 
-        List<DailyGameSession> sessions = dailyGameSessionRepository.findLongestSessionsByUser(user);
+        List<DailyGameSession> sessions = dailyGameSessionRepository.findLongestSessionsByUser(userId);
         if (sessions.isEmpty()) {
-            log.warn("Aucune session trouvée pour l'utilisateur " + user.getId());
-            throw new EntityNotFoundException("Aucune session trouvée pour l'utilisateur " + user.getId(),
+            log.warn("Aucune session trouvée pour l'utilisateur " + userId);
+            throw new EntityNotFoundException("Aucune session trouvée pour l'utilisateur " + userId,
                     ErrorCodes.DAILY_GAME_SESSION_NOT_FOUND);
         }
 
@@ -201,16 +204,16 @@ public class DailyGameSessionServiceImpl implements DailyGameSessionService {
     }
 
     @Override
-    public List<DailyGameSessionDto> getRecentSessionsForUser(User user, int limit) {
-        if (user == null) {
+    public List<DailyGameSessionDto> getRecentSessionsForUser(Integer userId, int limit) {
+        if (userId == null) {
             log.error("L'utilisateur est null");
             throw new IllegalArgumentException("L'utilisateur ne peut être null");
         }
 
-        List<DailyGameSession> sessions = dailyGameSessionRepository.findRecentSessionsByUser(user);
+        List<DailyGameSession> sessions = dailyGameSessionRepository.findRecentSessionsByUser(userId);
         if (sessions.isEmpty()) {
-            log.warn("Aucune session récente trouvée pour l'utilisateur " + user.getId());
-            throw new EntityNotFoundException("Aucune session récente trouvée pour l'utilisateur " + user.getId(),
+            log.warn("Aucune session récente trouvée pour l'utilisateur " + userId);
+            throw new EntityNotFoundException("Aucune session récente trouvée pour l'utilisateur " + userId,
                     ErrorCodes.DAILY_GAME_SESSION_NOT_FOUND);
         }
 
@@ -242,19 +245,19 @@ public class DailyGameSessionServiceImpl implements DailyGameSessionService {
 
     //=================================CALCUL ===============================
     @Override
-    public Integer calculateTotalPlaytimeByUser(User user) {
-        if (user == null) {
+    public Integer calculateTotalPlaytimeByUser(Integer userId) {
+        if (userId == null) {
             log.error("L'utilisateur est null");
             throw new IllegalArgumentException("L'utilisateur ne peut être null");
         }
-        Integer totalPlaytime = dailyGameSessionRepository.calculateTotalPlaytimeByUser(user);
-        log.info("Temps de jeu total pour l'utilisateur " + user.getId() + " : " + totalPlaytime);
+        Integer totalPlaytime = dailyGameSessionRepository.calculateTotalPlaytimeByUser(userId);
+        log.info("Temps de jeu total pour l'utilisateur " + userId + " : " + totalPlaytime);
         return totalPlaytime;
     }
 
     @Override
-    public Integer calculatePlaytimeByUserInPeriod(User user, Instant startDate, Instant endDate) {
-        if (user == null) {
+    public Integer calculatePlaytimeByUserInPeriod(Integer userId, Instant startDate, Instant endDate) {
+        if (userId == null) {
             log.error("L'utilisateur est null");
             throw new IllegalArgumentException("L'utilisateur ne peut être null");
         }
@@ -263,62 +266,62 @@ public class DailyGameSessionServiceImpl implements DailyGameSessionService {
             throw new IllegalArgumentException("La date de début et la date de fin doivent être fournies");
         }
 
-        Integer totalPlaytime = dailyGameSessionRepository.calculatePlaytimeByUserInPeriod(user, startDate, endDate);
+        Integer totalPlaytime = dailyGameSessionRepository.calculatePlaytimeByUserInPeriod(userId, startDate, endDate);
         // Ensure totalPlaytime is not null. If no sessions exist, return 0.
         if (totalPlaytime == null) {
             totalPlaytime = 0;
         }
 
         log.info("Temps de jeu total pour l'utilisateur {} entre {} et {}: {}",
-                user.getId(), startDate, endDate, totalPlaytime);
+                userId, startDate, endDate, totalPlaytime);
         return totalPlaytime;
     }
 
     @Override
-    public Long countSessionsByUser(User user) {
-        if (user == null) {
+    public Long countSessionsByUser(Integer userId) {
+        if (userId == null) {
             log.error("L'utilisateur est null");
             throw new IllegalArgumentException("L'utilisateur ne peut être null");
         }
 
-        Long count = dailyGameSessionRepository.countSessionsByUser(user);
+        Long count = dailyGameSessionRepository.countSessionsByUser(userId);
         if (count == null) {
             count = 0L;
         }
 
-        log.info("Nombre total de sessions pour l'utilisateur {}: {}", user.getId(), count);
+        log.info("Nombre total de sessions pour l'utilisateur {}: {}", userId, count);
         return count;
     }
 
     @Override
-    public Integer countGamesPlayedByUser(User user) {
-        if (user == null) {
+    public Integer countGamesPlayedByUser(Integer userId) {
+        if (userId == null) {
             log.error("L'utilisateur est null");
             throw new IllegalArgumentException("L'utilisateur ne peut être null");
         }
 
-        Integer totalGamesPlayed = dailyGameSessionRepository.countGamesPlayedByUser(user);
+        Integer totalGamesPlayed = dailyGameSessionRepository.countGamesPlayedByUser(userId);
         if (totalGamesPlayed == null) {
             totalGamesPlayed = 0;
         }
 
-        log.info("Nombre total de jeux joués pour l'utilisateur {}: {}", user.getId(), totalGamesPlayed);
+        log.info("Nombre total de jeux joués pour l'utilisateur {}: {}", userId, totalGamesPlayed);
         return totalGamesPlayed;
     }
 
     @Override
-    public Double calculateAveragePlaytimeByUser(User user) {
-        if (user == null) {
+    public Double calculateAveragePlaytimeByUser(Integer userId) {
+        if (userId == null) {
             log.error("L'utilisateur est null");
             throw new IllegalArgumentException("L'utilisateur ne peut être null");
         }
 
-        Double averagePlaytime = dailyGameSessionRepository.calculateAveragePlaytimeByUser(user);
+        Double averagePlaytime = dailyGameSessionRepository.calculateAveragePlaytimeByUser(userId);
         if (averagePlaytime == null) {
             averagePlaytime = 0.0;
         }
 
-        log.info("Moyenne quotidienne de jeu pour l'utilisateur {} : {}", user.getId(), averagePlaytime);
+        log.info("Moyenne quotidienne de jeu pour l'utilisateur {} : {}", userId, averagePlaytime);
         return averagePlaytime;
     }
 

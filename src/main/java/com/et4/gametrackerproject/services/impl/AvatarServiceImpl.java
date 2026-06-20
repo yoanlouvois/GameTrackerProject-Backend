@@ -2,8 +2,12 @@ package com.et4.gametrackerproject.services.impl;
 
 import com.et4.gametrackerproject.dto.AvatarDto;
 import com.et4.gametrackerproject.exception.EntityNotFoundException;
+import com.et4.gametrackerproject.exception.InvalidOperationException;
 import com.et4.gametrackerproject.model.Avatar;
+import com.et4.gametrackerproject.model.User;
+import com.et4.gametrackerproject.model.UserAchievement;
 import com.et4.gametrackerproject.repository.AvatarRepository;
+import com.et4.gametrackerproject.repository.UserRepository;
 import com.et4.gametrackerproject.services.AvatarService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,9 +26,11 @@ public class AvatarServiceImpl implements AvatarService {
 
     private final AvatarRepository avatarRepository;
     private static final Logger log = LoggerFactory.getLogger(AvatarServiceImpl.class);
+    private final UserRepository userRepository;
 
-    public AvatarServiceImpl(AvatarRepository avatarRepository) {
+    public AvatarServiceImpl(AvatarRepository avatarRepository, UserRepository userRepository) {
         this.avatarRepository = avatarRepository;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -115,8 +121,14 @@ public class AvatarServiceImpl implements AvatarService {
             throw new EntityNotFoundException("Aucun avatar trouvé avec l'ID " + id, ErrorCodes.AVATAR_NOT_FOUND);
         }
 
+        // Vérification si l'avatar est utilisé par un utilisateur
+        Optional<User> users = userRepository.findByAvatarId(id);
+        if (users.isPresent()) {
+            throw new InvalidOperationException("L'avatar est déjà utilisé par un utilisateur",
+                    ErrorCodes.AVATAR_ALREADY_IN_USE);
+        }
+
         avatarRepository.delete(optionalAvatar.get());
-        log.info("Avatar supprimé avec succès pour l'ID : " + id);
     }
 
     @Override

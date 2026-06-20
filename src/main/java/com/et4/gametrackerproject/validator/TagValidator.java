@@ -17,7 +17,7 @@ public class TagValidator {
             return errors;
         }
 
-        if (StringUtils.hasLength(tagDto.getName())) {
+        if (!StringUtils.hasLength(tagDto.getName())) {
             errors.add("Name is required");
         } else if (tagDto.getName().length() > 100) { // Limite arbitraire
             errors.add("Name cannot exceed 100 characters");

@@ -5,6 +5,8 @@ import com.et4.gametrackerproject.enums.NotifType;
 import com.et4.gametrackerproject.exception.EntityNotFoundException;
 import com.et4.gametrackerproject.exception.ErrorCodes;
 import com.et4.gametrackerproject.exception.InvalidEntityException;
+import com.et4.gametrackerproject.exception.InvalidOperationException;
+import com.et4.gametrackerproject.model.Game;
 import com.et4.gametrackerproject.model.Notification;
 import com.et4.gametrackerproject.model.User;
 import com.et4.gametrackerproject.repository.NotificationRepository;
@@ -18,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -75,7 +78,13 @@ public class NotificationServiceImpl implements NotificationService {
 
         Notification notification = notificationRepository.findById(notificationId).orElseThrow(() -> new EntityNotFoundException("Aucune notification avec l'id " + notificationId + " n'a été trouvée", ErrorCodes.NOTIFICATION_NOT_FOUND));
 
-        // TODO : Ajouter suppression des relations
+        Optional<User> users = userRepository.findByNotificationId(notificationId);
+        if (users.isPresent()) {
+            log.error("Impossible de supprimer la notification avec l'ID {} car il est référencé par un user", notificationId);
+            throw new InvalidOperationException("Impossible de supprimer la notification car il est référencé par un user",
+                    ErrorCodes.NOTIFICATION_ALREADY_USED);
+        }
+
         notificationRepository.delete(notification);
     }
 

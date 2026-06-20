@@ -4,10 +4,15 @@ import com.et4.gametrackerproject.dto.auth.AuthenticationRequest;
 import com.et4.gametrackerproject.dto.auth.AuthenticationResponse;
 import com.et4.gametrackerproject.services.auth.ApplicationUserDetailsService;
 import com.et4.gametrackerproject.utils.JwtUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -22,6 +27,7 @@ import static com.et4.gametrackerproject.utils.Constants.AUTHENTICATION_ENDPOINT
  */
 @RestController
 @RequestMapping(AUTHENTICATION_ENDPOINT)
+@Slf4j
 public class AuthenticationController {
 
     /**
@@ -53,25 +59,36 @@ public class AuthenticationController {
      * @throws org.springframework.security.core.AuthenticationException si l'authentification échoue
      */
     @PostMapping("/authenticate")
-    public ResponseEntity<AuthenticationResponse> authenticate(@RequestBody AuthenticationRequest request) {
-        // Authentifie l'utilisateur avec les identifiants fournis
-        // Si l'authentification échoue, une AuthenticationException est levée automatiquement
-        // et sera gérée par les mécanismes de Spring Security
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getLogin(),
-                        request.getPassword()
-                )
-        );
+    public ResponseEntity<?> authenticate(@RequestBody AuthenticationRequest request) {
+        try {
+            log.info("Authentication attempt for user: {}", request.getLogin());
 
-        // Si l'authentification réussit, on charge les détails complets de l'utilisateur
-        final UserDetails userDetails = userDetailsService.loadUserByUsername(request.getLogin());
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            request.getLogin(),
+                            request.getPassword()
+                    )
+            );
 
-        // Génère un token JWT pour l'utilisateur authentifié
-        final String jwt = jwtUtil.generateToken(userDetails);
+            log.info("User authenticated successfully: {}", request.getLogin());
 
-        // Retourne une réponse 200 OK avec le token JWT
-        return ResponseEntity.ok(AuthenticationResponse.builder().accessToken(jwt).build());
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+
+            // Si aucune exception n'est lancée, récupère les détails complets de l'utilisateur
+            final UserDetails userDetails = userDetailsService.loadUserByUsername(request.getLogin());
+
+            // Génère un token JWT pour l'utilisateur authentifié
+            final String jwt = jwtUtil.generateToken(userDetails);
+
+            // Retourne une réponse 200 OK avec le token JWT
+            return ResponseEntity.ok(AuthenticationResponse.builder().accessToken(jwt).build());
+        } catch (BadCredentialsException e) {
+            log.error("Authentication failed: Bad credentials for user {}", request.getLogin());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
+        } catch (Exception e) {
+            log.error("Authentication error: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Authentication error: " + e.getMessage());
+        }
     }
 
     /**

@@ -50,7 +50,7 @@ public class ReportValidator {
             errors.add("Content ID is required");
         }
 
-        if (StringUtils.hasLength(report.getReason())) {
+        if (!StringUtils.hasLength(report.getReason())) {
             errors.add("Report reason is required");
         } else if (report.getReason().length() < 10) { // Limite arbitraire
             errors.add("Report reason must be at least 10 characters");

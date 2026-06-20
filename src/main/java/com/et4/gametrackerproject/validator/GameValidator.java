@@ -17,6 +17,7 @@ public class GameValidator {
             errors.add("Name is required");
             errors.add("URL is required");
             errors.add("Category is required");
+            errors.add("Image Url is required");
             return errors;
         }
 
@@ -36,6 +37,19 @@ public class GameValidator {
             }
             if (gameDto.getUrl().length() > 255) { // Limite à vérifier
                 errors.add("URL cannot exceed 255 characters");
+            }
+        }
+
+        if(gameDto.getImageUrl() == null || gameDto.getImageUrl().isBlank()) {
+            errors.add("Image Url is required");
+        }
+
+        if(gameDto.getImageUrl() != null && !gameDto.getImageUrl().isBlank()) {
+            if (!gameDto.getImageUrl().startsWith("http://") && !gameDto.getImageUrl().startsWith("https://")) {
+                errors.add("Image URL must start with http:// or https://");
+            }
+            if (gameDto.getImageUrl().length() > 255) { // Limite à vérifier
+                errors.add("Image URL cannot exceed 255 characters");
             }
         }
 

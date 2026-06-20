@@ -4,9 +4,12 @@ import com.et4.gametrackerproject.dto.FriendshipDto;
 import com.et4.gametrackerproject.dto.UserDto;
 import com.et4.gametrackerproject.enums.FriendshipStatus;
 import com.et4.gametrackerproject.exception.EntityNotFoundException;
+import com.et4.gametrackerproject.exception.ErrorCodes;
+import com.et4.gametrackerproject.exception.InvalidOperationException;
 import com.et4.gametrackerproject.model.Friendship;
 import com.et4.gametrackerproject.model.User;
 import com.et4.gametrackerproject.repository.FriendshipRepository;
+import com.et4.gametrackerproject.repository.UserRepository;
 import com.et4.gametrackerproject.services.FriendshipService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,9 +25,11 @@ public class FriendshipServiceImpl implements FriendshipService {
     //======================== CREATE/DELETE/UPLOAD ===================
     private static final Logger log = LoggerFactory.getLogger(FriendshipServiceImpl.class);
     private final FriendshipRepository friendshipRepository;
+    private final UserRepository userRepository;
 
-    public FriendshipServiceImpl(FriendshipRepository friendshipRepository) {
+    public FriendshipServiceImpl(FriendshipRepository friendshipRepository, UserRepository userRepository) {
         this.friendshipRepository = friendshipRepository;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -56,13 +61,13 @@ public class FriendshipServiceImpl implements FriendshipService {
                 .orElseThrow(() -> new EntityNotFoundException("Aucune relation d'amitié trouvée avec l'ID " + friendshipId));
         // Update the status and persist the changes
         friendship.setStatus(newStatus);
-        friendship = friendshipRepository.save(friendship);
+        Friendship updatedFriendship = friendshipRepository.save(friendship);
         log.info("Mise à jour du statut de la relation d'amitié {} vers {}", friendshipId, newStatus);
-        return FriendshipDto.fromEntity(friendship);
+        return FriendshipDto.fromEntity(updatedFriendship);
     }
 
     @Override
-    public void deleteFriendship(Integer friendshipId) {
+    public void deleteFriendshipById(Integer friendshipId) {
         if (friendshipId == null) {
             log.error("L'ID de la relation d'amitié est null");
             throw new IllegalArgumentException("L'ID de la relation d'amitié ne peut être null");
@@ -72,21 +77,13 @@ public class FriendshipServiceImpl implements FriendshipService {
                 .orElseThrow(() -> new EntityNotFoundException("Aucune relation d'amitié trouvée avec l'ID " + friendshipId));
         friendshipRepository.delete(friendship);
         log.info("Relation d'amitié avec l'ID {} supprimée avec succès", friendshipId);
-    }
 
-    @Override
-    public void removeAllFriendshipsForUser(Integer userId) {
-        if (userId == null) {
-            log.error("L'ID utilisateur est null");
-            throw new IllegalArgumentException("L'ID utilisateur ne peut être null");
-        }
-        // Retrieve all friendships where the user is either user1 or user2
-        List<Friendship> friendships = friendshipRepository.findByUser1IdOrUser2Id(userId, userId);
-        if (friendships.isEmpty()) {
-            log.warn("Aucune relation d'amitié trouvée pour l'utilisateur {}", userId);
-        } else {
-            friendshipRepository.deleteAll(friendships);
-            log.info("Suppression de {} relations d'amitié pour l'utilisateur {}", friendships.size(), userId);
+        //Verifie pour les 2 amis
+        Optional<User> users = userRepository.findByFriendshipId(friendshipId);
+        if (users.isPresent()) {
+            log.error("Impossible de supprimer l'utilisateur car il a des jeux favoris");
+            throw new InvalidOperationException("Cet utilisateur a des jeux favoris, impossible de le supprimer",
+                    ErrorCodes.FRIENDSHIP_ALREADY_USED);
         }
     }
 
@@ -117,8 +114,8 @@ public class FriendshipServiceImpl implements FriendshipService {
     }
 
     @Override
-    public List<FriendshipDto> getFriendshipsForUserByStatus(User user, FriendshipStatus status) {
-        if (user.getId() == null) {
+    public List<FriendshipDto> getFriendshipsForUserByStatus(Integer userId, FriendshipStatus status) {
+        if (userId == null) {
             log.error("L'ID utilisateur est null");
             throw new IllegalArgumentException("L'ID utilisateur ne peut être null");
         }
@@ -127,7 +124,7 @@ public class FriendshipServiceImpl implements FriendshipService {
             throw new IllegalArgumentException("Le statut de la relation d'amitié ne peut être null");
         }
         // Retrieve all friendships for the user (as user1 or user2) with the given status
-        List<Friendship> friendships = friendshipRepository.findAllByUserAndStatus(user, status);
+        List<Friendship> friendships = friendshipRepository.findAllByUserAndStatus(userId, status);
         return friendships.stream()
                 .map(FriendshipDto::fromEntity)
                 .collect(Collectors.toList());

@@ -4,6 +4,8 @@ import com.et4.gametrackerproject.dto.MessageDto;
 import com.et4.gametrackerproject.exception.EntityNotFoundException;
 import com.et4.gametrackerproject.exception.ErrorCodes;
 import com.et4.gametrackerproject.exception.InvalidEntityException;
+import com.et4.gametrackerproject.exception.InvalidOperationException;
+import com.et4.gametrackerproject.model.Game;
 import com.et4.gametrackerproject.model.Message;
 import com.et4.gametrackerproject.model.User;
 import com.et4.gametrackerproject.repository.MessageRepository;
@@ -19,6 +21,7 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -69,7 +72,7 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
-    public void deleteMessage(Integer messageId) {
+    public void deleteMessageById(Integer messageId) {
         if(messageId == null){
             log.error("Message ID is null");
             throw new InvalidEntityException("Message ID is null", ErrorCodes.MESSAGE_NOT_VALID);
@@ -79,7 +82,15 @@ public class MessageServiceImpl implements MessageService {
 
         Message message = messageRepository.findById(messageId).orElseThrow(() -> new EntityNotFoundException("Message not found", ErrorCodes.MESSAGE_NOT_FOUND));
 
-        // TODO : Supprimer les relations avec les autres entités
+        Optional<User> users = userRepository.findByMessageId(messageId);
+        if (users.isPresent()) {
+            log.error("Impossible de supprimer le message avec l'ID {} car il est référencé par un receiver ou un sender", messageId);
+            throw new InvalidOperationException("Impossible de supprimer le message car il est référencé par un receiver ou un sender",
+                    ErrorCodes.MESSAGE_ALREADY_USED);
+        }
+
+
+
         messageRepository.delete(message);
     }
 

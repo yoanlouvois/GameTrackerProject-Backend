@@ -45,7 +45,7 @@ public class UserSanctionValidator {
             errors.add("Type is required");
         }
 
-        if (StringUtils.hasLength(userSanction.getReason())) {
+        if (!StringUtils.hasLength(userSanction.getReason())) {
             errors.add("Reason is required");
         } else if (userSanction.getReason().length() < MIN_REASON_LENGTH) {
             errors.add("Reason must be at least " + MIN_REASON_LENGTH + " characters");

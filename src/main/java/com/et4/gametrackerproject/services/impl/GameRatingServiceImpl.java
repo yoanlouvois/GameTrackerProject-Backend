@@ -3,6 +3,7 @@ package com.et4.gametrackerproject.services.impl;
 import com.et4.gametrackerproject.dto.GameRatingDto;
 import com.et4.gametrackerproject.exception.EntityNotFoundException;
 import com.et4.gametrackerproject.exception.ErrorCodes;
+import com.et4.gametrackerproject.exception.InvalidOperationException;
 import com.et4.gametrackerproject.model.Game;
 import com.et4.gametrackerproject.model.GameRating;
 import com.et4.gametrackerproject.model.User;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -30,7 +32,7 @@ public class GameRatingServiceImpl implements GameRatingService {
     private final UserRepository userRepository;
     private final GameRepository gameRepository;
 
-    public GameRatingServiceImpl(GameRatingRepository gameRatingRepository, UserService userService, GameService gameService, UserRepository userRepository, GameRepository gameRepository) {
+    public GameRatingServiceImpl(GameRatingRepository gameRatingRepository,UserRepository userRepository, GameRepository gameRepository) {
         this.gameRatingRepository = gameRatingRepository;
         this.userRepository = userRepository;
         this.gameRepository = gameRepository;
@@ -64,52 +66,28 @@ public class GameRatingServiceImpl implements GameRatingService {
     }
 
     @Override
-    public void deleteRating(Integer ratingId) {
+    public void deleteRatingById(Integer ratingId) {
         if (ratingId == null) {
             throw new IllegalArgumentException("L'ID du rating ne peut être null");
         }
         GameRating rating = gameRatingRepository.findById(ratingId)
                 .orElseThrow(() -> new EntityNotFoundException("Rating non trouvé avec l'ID " + ratingId, ErrorCodes.GAME_RATING_NOT_FOUND));
+
+        Optional<Game> games = gameRepository.findByGameRatingId(ratingId);
+        if (games.isPresent()) {
+            log.error("Impossible de supprimer l'entrée de leaderboard avec l'ID {} car elle est utilisée par le jeu {}", ratingId, games.get().getId());
+            throw new InvalidOperationException("Impossible de supprimer l'entrée de leaderboard car elle est utilisée par le jeu",
+                    ErrorCodes.GAME_RATING_ALREADY_USED);
+        }
+
+        Optional<User> users = userRepository.findByGameRatingId(ratingId);
+        if (users.isPresent()) {
+            log.error("Impossible de supprimer l'entrée de leaderboard avec l'ID {} car elle est utilisée par l'utilisateur {}", ratingId, users.get().getId());
+            throw new InvalidOperationException("Impossible de supprimer l'entrée de leaderboard car elle est utilisée par l'utilisateur",
+                    ErrorCodes.GAME_RATING_ALREADY_USED);
+        }
         gameRatingRepository.delete(rating);
-        log.info("Rating supprimé avec l'ID {}", ratingId);
     }
-
-    @Override
-    public void deleteAllRatingsForGame(Integer gameId) {
-        // Vérifie que l'ID du jeu n'est pas null
-        if (gameId == null) {
-            throw new IllegalArgumentException("L'ID du jeu ne peut être null");
-        }
-        // Récupère le jeu via le gameRepository
-        Game game = gameRepository.findById(gameId)
-                .orElseThrow(() -> new EntityNotFoundException("Jeu non trouvé avec l'ID " + gameId, ErrorCodes.GAME_NOT_FOUND));
-        // Récupère la liste des ratings pour ce jeu
-        List<GameRating> ratings = gameRatingRepository.findByGame(game);
-        // Si la liste n'est pas vide, supprime toutes les ratings
-        if (!ratings.isEmpty()) {
-            gameRatingRepository.deleteAll(ratings);
-            log.info("Suppression de {} ratings pour le jeu {}", ratings.size(), gameId);
-        }
-    }
-
-    @Override
-    public void deleteAllRatingsForUser(Integer userId) {
-        // Vérifie que l'ID de l'utilisateur n'est pas null
-        if (userId == null) {
-            throw new IllegalArgumentException("L'ID de l'utilisateur ne peut être null");
-        }
-        // Récupère l'utilisateur via le userRepository
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("Utilisateur non trouvé avec l'ID " + userId, ErrorCodes.USER_NOT_FOUND));
-        // Récupère la liste des ratings données par cet utilisateur
-        List<GameRating> ratings = gameRatingRepository.findByUser(user);
-        // Si la liste n'est pas vide, supprime toutes les ratings
-        if (!ratings.isEmpty()) {
-            gameRatingRepository.deleteAll(ratings);
-            log.info("Suppression de {} ratings pour l'utilisateur {}", ratings.size(), userId);
-        }
-    }
-
 
     //=============== GETTER ====================
 

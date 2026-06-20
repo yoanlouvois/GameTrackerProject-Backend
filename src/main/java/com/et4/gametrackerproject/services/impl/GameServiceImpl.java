@@ -5,8 +5,9 @@ import com.et4.gametrackerproject.enums.DifficultyLevel;
 import com.et4.gametrackerproject.enums.GameCategory;
 import com.et4.gametrackerproject.exception.EntityNotFoundException;
 import com.et4.gametrackerproject.exception.ErrorCodes;
-import com.et4.gametrackerproject.model.Game;
-import com.et4.gametrackerproject.repository.GameRepository;
+import com.et4.gametrackerproject.exception.InvalidOperationException;
+import com.et4.gametrackerproject.model.*;
+import com.et4.gametrackerproject.repository.*;
 import com.et4.gametrackerproject.services.GameService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,9 +23,25 @@ import java.util.Set;
 public class GameServiceImpl implements GameService {
     private static final Logger log = LoggerFactory.getLogger(GameServiceImpl.class);
     private final GameRepository gameRepository;
+    private final GameRecommendationRepository gameRecommendationRepository;
+    private final GameProgressRepository gameProgressRepository;
+    private final WinStreakRepository winStreakRepository;
+    private final GameLeaderboardRepository gameLeaderboardRepository;
+    private final GameRatingRepository gameRatingRepository;
+    private final FavoriteGameRepository favoriteGameRepository;
+    private final GameTagRepository gameTagRepository;
+    private final GameCommentRepository gameCommentRepository;
 
-    public GameServiceImpl(GameRepository gameRepository) {
+    public GameServiceImpl(GameRepository gameRepository, GameRecommendationRepository gameRecommendationRepository, GameProgressRepository gameProgressRepository, WinStreakRepository winStreakRepository, GameLeaderboardRepository gameLeaderboardRepository, GameRatingRepository gameRatingRepository, FavoriteGameRepository favoriteGameRepository, GameTagRepository gameTagRepository, GameCommentRepository gameCommentRepository) {
         this.gameRepository = gameRepository;
+        this.gameRecommendationRepository = gameRecommendationRepository;
+        this.gameProgressRepository = gameProgressRepository;
+        this.winStreakRepository = winStreakRepository;
+        this.gameLeaderboardRepository = gameLeaderboardRepository;
+        this.gameRatingRepository = gameRatingRepository;
+        this.favoriteGameRepository = favoriteGameRepository;
+        this.gameTagRepository = gameTagRepository;
+        this.gameCommentRepository = gameCommentRepository;
     }
 
     @Override
@@ -54,6 +71,7 @@ public class GameServiceImpl implements GameService {
         // Mettre à jour les propriétés souhaitées (exemple simple, adapter selon vos besoins)
         existingGame.setName(gameDto.getName());
         existingGame.setUrl(gameDto.getUrl());
+        existingGame.setImageUrl(gameDto.getImageUrl());
         existingGame.setDescription(gameDto.getDescription());
         existingGame.setCategory(gameDto.getCategory());
         existingGame.setAverageRating(gameDto.getAverageRating());
@@ -76,8 +94,64 @@ public class GameServiceImpl implements GameService {
         }
         Game existingGame = gameRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Jeu non trouvé avec l'ID " + id, ErrorCodes.GAME_NOT_FOUND));
+
+        Optional<GameComment> gameComment = gameCommentRepository.findByGameId(id);
+        if (gameComment.isPresent()) {
+            log.error("Impossible de supprimer le jeu avec l'ID {} car il est référencé par un commentaire", id);
+            throw new InvalidOperationException("Impossible de supprimer le jeu car il est référencé par un commentaire",
+                    ErrorCodes.GAME_ALREADY_USED);
+        }
+
+        Optional<GameRecommendation> gameRecommendations = gameRecommendationRepository.findByGameId(id);
+        if (gameRecommendations.isPresent()) {
+            log.error("Impossible de supprimer le jeu avec l'ID {} car il est référencé par une recommandation", id);
+            throw new InvalidOperationException("Impossible de supprimer le jeu car il est référencé par une recommandation",
+                    ErrorCodes.GAME_ALREADY_USED);
+        }
+
+        Optional<GameProgress> gameProgress = gameProgressRepository.findByGameId(id);
+        if (gameProgress.isPresent()) {
+            log.error("Impossible de supprimer le jeu avec l'ID {} car il est référencé par une progression", id);
+            throw new InvalidOperationException("Impossible de supprimer le jeu car il est référencé par une progression",
+                    ErrorCodes.GAME_ALREADY_USED);
+        }
+
+        List<WinStreak> winStreaks = winStreakRepository.findByGameId(id);
+        if (!winStreaks.isEmpty()) {
+            log.error("Impossible de supprimer le jeu avec l'ID {} car il est référencé par une série de victoires", id);
+            throw new InvalidOperationException("Impossible de supprimer le jeu car il est référencé par une série de victoires",
+                    ErrorCodes.GAME_ALREADY_USED);
+        }
+
+        Optional<GameLeaderboard> gameLeaderboard = gameLeaderboardRepository.findByGameId(id);
+        if (gameLeaderboard.isPresent()) {
+            log.error("Impossible de supprimer le jeu avec l'ID {} car il est référencé par un classement", id);
+            throw new InvalidOperationException("Impossible de supprimer le jeu car il est référencé par un classement",
+                    ErrorCodes.GAME_ALREADY_USED);
+        }
+
+        Optional<GameRating> gameRating = gameRatingRepository.findByGameId(id);
+        if (gameRating.isPresent()) {
+            log.error("Impossible de supprimer le jeu avec l'ID {} car il est référencé par une note", id);
+            throw new InvalidOperationException("Impossible de supprimer le jeu car il est référencé par une note",
+                    ErrorCodes.GAME_ALREADY_USED);
+        }
+
+        Optional<FavoriteGame> favoriteGames = favoriteGameRepository.findByGameId(id);
+        if (favoriteGames.isPresent()) {
+            log.error("Impossible de supprimer le jeu avec l'ID {} car il est référencé par un jeu favori", id);
+            throw new InvalidOperationException("Impossible de supprimer le jeu car il est référencé par un jeu favori",
+                    ErrorCodes.GAME_ALREADY_USED);
+        }
+
+        Optional<GameTag> gameTags = gameTagRepository.findByGameId(id);
+        if (gameTags.isPresent()) {
+            log.error("Impossible de supprimer le jeu avec l'ID {} car il est référencé par un tag", id);
+            throw new InvalidOperationException("Impossible de supprimer le jeu car il est référencé par un tag",
+                    ErrorCodes.GAME_ALREADY_USED);
+        }
+
         gameRepository.delete(existingGame);
-        log.info("Jeu avec l'ID {} supprimé", id);
     }
 
     //=======================GETTER===========================
@@ -163,6 +237,18 @@ public class GameServiceImpl implements GameService {
         Optional<Game> gameOpt = gameRepository.findByUrl(url);
         log.info("Recherche de jeu par URL : {}", url);
         return gameOpt;
+    }
+
+    @Override
+    public String getImageUrlById(Integer id) {
+        if(id == null) {
+            throw new IllegalArgumentException("L'ID ne peut être null");
+        }
+
+        Game game = gameRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Jeu non trouvé avec l'ID " + id, ErrorCodes.GAME_NOT_FOUND));
+
+        return gameRepository.findImageUrlById(game.getId());
     }
 
     // Recherche des jeux par nom exact

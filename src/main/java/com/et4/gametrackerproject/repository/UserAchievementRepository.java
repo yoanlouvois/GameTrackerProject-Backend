@@ -65,4 +65,9 @@ public interface UserAchievementRepository extends JpaRepository<UserAchievement
     List<UserAchievement> findAchievementProgressionTimeline(@Param("user") User user);
 
     UserAchievement user(User user);
+
+    @Query("SELECT ua FROM UserAchievement ua WHERE ua.achievement.id = :achievementId")
+    Optional<UserAchievement> findAllByAchievementId(Integer achievementId);
+
+
 }

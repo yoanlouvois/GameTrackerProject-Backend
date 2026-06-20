@@ -3,16 +3,13 @@ package com.et4.gametrackerproject.controller.api;
 import com.et4.gametrackerproject.dto.FriendshipDto;
 import com.et4.gametrackerproject.dto.UserDto;
 import com.et4.gametrackerproject.enums.FriendshipStatus;
-import com.et4.gametrackerproject.model.User;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 import static com.et4.gametrackerproject.utils.Constants.APP_ROOT;
 
@@ -180,14 +177,6 @@ public interface FriendshipApi {
     })
     List<FriendshipDto> searchFriendshipsByUser(@PathVariable String username);
 
-    @DeleteMapping(value = APP_ROOT + "/friendships/admin/delete/{userId}")
-    @Operation(summary = "Supprimer toutes les amitiés d'un utilisateur", description = "Supprimer toutes les amitiés d'un utilisateur")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Toutes les amitiés ont été supprimées"),
-            @ApiResponse(responseCode = "404", description = "Aucune amitié n'a été trouvée pour cet utilisateur")
-    })
-    void removeAllFriendshipsForUser(@PathVariable Integer userId);
-
     @GetMapping(value = APP_ROOT + "/friendships/suggest/{userId}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Suggérer des amis à un utilisateur", description = "Suggérer des amis à un utilisateur en fonction de ses amis actuels")
     @ApiResponses(value = {
@@ -196,12 +185,12 @@ public interface FriendshipApi {
     })
     List<UserDto> suggestFriends(@PathVariable Integer userId);
 
-    @GetMapping(value = APP_ROOT + "/friendships/status/{user}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = APP_ROOT + "/friendships/status/{userId}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Récupérer les amitiés d'un utilisateur par statut", description = "Récupérer les amitiés d'un utilisateur par statut")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "La liste des amitiés a été trouvée"),
             @ApiResponse(responseCode = "404", description = "Aucune amitié n'a été trouvée pour cet utilisateur")
     })
-    List<FriendshipDto> getFriendshipsForUserByStatus(@PathVariable User user, FriendshipStatus status);
+    List<FriendshipDto> getFriendshipsForUserByStatus(@PathVariable Integer userId, FriendshipStatus status);
 
 }

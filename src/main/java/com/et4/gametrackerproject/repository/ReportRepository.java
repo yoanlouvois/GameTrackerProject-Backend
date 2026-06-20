@@ -120,4 +120,8 @@ public interface ReportRepository extends JpaRepository<Report,Integer> {
     List<Object[]> findUsersWithMultipleRecentReports(
             @Param("since") Instant since,
             @Param("minReports") Long minReports);
+
+    // Trouver les rapports d'un utilisateur spécifique
+    @Query("SELECT r FROM Report r WHERE r.reporter.id = :userId OR r.reported.id = :userId OR r.resolver.id = :userId")
+    Optional<Report> findByUserId(Integer userId);
 }

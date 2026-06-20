@@ -6,8 +6,7 @@ import com.et4.gametrackerproject.enums.ProfilRank;
 import com.et4.gametrackerproject.enums.ScreenTheme;
 import com.et4.gametrackerproject.model.User;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -17,6 +16,9 @@ import java.util.stream.Collectors;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode
 public class UserDto {
     private Integer id;
 

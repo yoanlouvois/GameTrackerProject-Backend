@@ -2,13 +2,15 @@ package com.et4.gametrackerproject.dto;
 
 import com.et4.gametrackerproject.enums.FriendshipStatus;
 import com.et4.gametrackerproject.model.Friendship;
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 
 import java.time.Instant;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode
 public class FriendshipDto {
     private Integer id;
 

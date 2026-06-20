@@ -91,22 +91,6 @@ public interface GameRatingApi {
     })
     Page<GameRatingDto> getRecentRatings(Pageable pageable);
 
-    @DeleteMapping(value = APP_ROOT + "/rating/admin/game/{gameId}/delete")
-    @Operation(summary = "Supprimer toutes les évaluations d'un jeu", description = "Supprimer toutes les évaluations d'un jeu")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "évaluations supprimées"),
-            @ApiResponse(responseCode = "404", description = "Aucune évaluation trouvée pour ce jeu")
-    })
-    void deleteAllRatingsForGame(@PathVariable Integer gameId);
-
-    @DeleteMapping(value = APP_ROOT + "/rating/admin/user/{userId}/delete")
-    @Operation(summary = "Supprimer toutes les évaluations d'un utilisateur", description = "Supprimer toutes les évaluations d'un utilisateur")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "évaluations supprimées"),
-            @ApiResponse(responseCode = "404", description = "Aucune évaluation trouvée pour cet utilisateur")
-    })
-    void deleteAllRatingsForUser(@PathVariable Integer userId);
-
     @GetMapping(value = APP_ROOT + "/rating/search", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Rechercher des évaluations", description = "Rechercher des évaluations")
     @ApiResponses({

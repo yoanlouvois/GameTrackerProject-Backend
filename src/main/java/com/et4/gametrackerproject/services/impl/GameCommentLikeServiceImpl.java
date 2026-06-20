@@ -4,6 +4,7 @@ import com.et4.gametrackerproject.dto.GameCommentLikeDto;
 import com.et4.gametrackerproject.dto.UserDto;
 import com.et4.gametrackerproject.exception.EntityNotFoundException;
 import com.et4.gametrackerproject.exception.ErrorCodes;
+import com.et4.gametrackerproject.exception.InvalidOperationException;
 import com.et4.gametrackerproject.model.GameComment;
 import com.et4.gametrackerproject.model.GameCommentLike;
 import com.et4.gametrackerproject.model.User;
@@ -74,7 +75,7 @@ public class GameCommentLikeServiceImpl implements GameCommentLikeService {
     }
 
     @Override
-    public void removeCommentLike(Integer likeId) {
+    public void deleteGameCommentLikeById(Integer likeId) {
         if (likeId == null) {
             throw new IllegalArgumentException("Like ID must not be null");
         }
@@ -82,8 +83,23 @@ public class GameCommentLikeServiceImpl implements GameCommentLikeService {
                 .orElseThrow(() -> new EntityNotFoundException(
                         "Like not found with ID: " + likeId,
                         ErrorCodes.GAME_COMMENT_LIKE_NOT_FOUND));
+
+        Optional<GameComment> gameComments = gameCommentRepository.findByGameCommentLikeId(likeId);
+        if (gameComments.isPresent()) {
+            log.error("Impossible de supprimer le like, car il est associé à un commentaire");
+            throw new InvalidOperationException("Impossible de supprimer le like, car il est associé à un commentaire",
+                    ErrorCodes.GAME_COMMENT_LIKE_ALREADY_USED);
+        }
+
+        Optional<User> users = userRepository.findByGameCommentLikeId(likeId);
+        if (users.isPresent()) {
+            log.error("Impossible de supprimer le like, car il est associé à un utilisateur");
+            throw new InvalidOperationException("Impossible de supprimer le like, car il est associé à un utilisateur",
+                    ErrorCodes.GAME_COMMENT_LIKE_ALREADY_USED);
+        }
+
         gameCommentLikeRepository.delete(like);
-        log.info("Deleted like with ID {}", likeId);
+
     }
 
 

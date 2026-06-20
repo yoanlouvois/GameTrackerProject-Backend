@@ -2,8 +2,7 @@ package com.et4.gametrackerproject.dto;
 
 import com.et4.gametrackerproject.model.GameComment;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 
 import java.time.Instant;
 import java.util.HashSet;
@@ -12,6 +11,9 @@ import java.util.stream.Collectors;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode
 public class GameCommentDto {
     private Integer id;
 

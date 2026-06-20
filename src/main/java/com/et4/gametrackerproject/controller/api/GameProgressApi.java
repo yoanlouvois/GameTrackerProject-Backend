@@ -21,14 +21,6 @@ public interface GameProgressApi {
     @ApiResponse(responseCode = "200", description = "Progression de jeu créée ")
     GameProgressDto createProgress(@RequestBody GameProgressDto progressDto);
 
-    @GetMapping(value = APP_ROOT + "/progress/{progressId}", produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Récupérer une progression de jeu par son ID", description = "Récupérer une progression de jeu par son ID")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Progression de jeu trouvée"),
-            @ApiResponse(responseCode = "404", description = "Progression de jeu non trouvée")
-    })
-    GameProgressDto getProgressById(@PathVariable("progressId") Integer progressId);
-
     @DeleteMapping(value = APP_ROOT + "/progress/{progressId}")
     @Operation(summary = "Supprimer une progression de jeu", description = "Supprimer une progression de jeu")
     @ApiResponses({
@@ -58,6 +50,14 @@ public interface GameProgressApi {
             @ApiResponse(responseCode = "404", description = "Session de jeu non trouvée")
     })
     GameProgressDto completeGame(@PathVariable("progressId") Integer progressId);
+
+    @GetMapping(value = APP_ROOT + "/progress/{progressId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Récupérer une progression de jeu par son ID", description = "Récupérer une progression de jeu par son ID")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Progression de jeu trouvée"),
+            @ApiResponse(responseCode = "404", description = "Progression de jeu non trouvée")
+    })
+    GameProgressDto getProgressById(@PathVariable("progressId") Integer progressId);
 
     @PutMapping(value = APP_ROOT + "/progress/{progressId}/reset", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Réinitialiser la progression de jeu", description = "Réinitialiser la progression de jeu")

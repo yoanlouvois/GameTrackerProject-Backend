@@ -2,11 +2,13 @@ package com.et4.gametrackerproject.dto;
 
 import com.et4.gametrackerproject.model.FavoriteGame;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode
 public class FavoriteGameDto {
     private Integer id;
 

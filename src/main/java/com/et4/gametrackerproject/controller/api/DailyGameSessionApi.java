@@ -2,7 +2,6 @@ package com.et4.gametrackerproject.controller.api;
 
 import com.et4.gametrackerproject.dto.DailyGameSessionDto;
 import com.et4.gametrackerproject.dto.UserDto;
-import com.et4.gametrackerproject.model.User;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -48,21 +47,21 @@ public interface DailyGameSessionApi {
     })
     void deleteSession(@PathVariable("idSession") Integer id);
 
-    @GetMapping(value = APP_ROOT + "/sessions/user/{user}/date/{date}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = APP_ROOT + "/sessions/user/{userId}/date/{date}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Renvoie une session de jeu par utilisateur et date", description = "Renvoie une session de jeu par utilisateur et date")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "La session a été trouvée"),
             @ApiResponse(responseCode = "404", description = "Aucune session n'a été trouvée avec cet utilisateur et cette date")
     })
-    DailyGameSessionDto getSessionByUserAndDate(@PathVariable User user, @PathVariable Instant date);
+    DailyGameSessionDto getSessionByUserAndDate(@PathVariable Integer userId, @PathVariable Instant date);
 
-    @GetMapping(value = APP_ROOT + "/sessions/user/{user}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = APP_ROOT + "/sessions/user/{userId}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Renvoie toutes les sessions de jeu d'un utilisateur", description = "Renvoie toutes les sessions de jeu d'un utilisateur")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Les sessions ont été trouvées"),
             @ApiResponse(responseCode = "404", description = "Aucune session n'a été trouvée pour cet utilisateur")
     })
-    List<DailyGameSessionDto> getSessionsForUser(@PathVariable User user);
+    List<DailyGameSessionDto> getSessionsForUser(@PathVariable Integer userId);
 
     @GetMapping(value = APP_ROOT + "/sessions/user/{userId}/between/{start}/{end}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Renvoie toutes les sessions de jeu d'un utilisateur entre deux dates", description = "Renvoie toutes les sessions de jeu d'un utilisateur entre deux dates")
@@ -96,61 +95,61 @@ public interface DailyGameSessionApi {
     })
     Map<UserDto, Long> getMostActiveUsers();
 
-    @GetMapping(value = APP_ROOT + "/sessions/total-playtime/{user}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = APP_ROOT + "/sessions/total-playtime/{userId}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Renvoie le temps de jeu total d'un utilisateur", description = "Renvoie le temps de jeu total d'un utilisateur")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Le temps de jeu total a été trouvé"),
             @ApiResponse(responseCode = "404", description = "Aucun utilisateur n'a été trouvé avec cet id")
     })
-    Integer calculateTotalPlaytimeByUser(@PathVariable User user);
+    Integer calculateTotalPlaytimeByUser(@PathVariable Integer userId);
 
-    @GetMapping(value = APP_ROOT + "/sessions/playtime/{user}/between/{start}/{end}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = APP_ROOT + "/sessions/playtime/{userId}/between/{start}/{end}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Renvoie le temps de jeu d'un utilisateur entre deux dates", description = "Renvoie le temps de jeu d'un utilisateur entre deux dates")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Le temps de jeu a été trouvé"),
             @ApiResponse(responseCode = "404", description = "Aucun utilisateur n'a été trouvé avec cet id")
     })
-    Integer calculatePlaytimeByUserInPeriod(@PathVariable User user, @PathVariable Instant start, @PathVariable Instant end);
+    Integer calculatePlaytimeByUserInPeriod(@PathVariable Integer userId, @PathVariable Instant start, @PathVariable Instant end);
 
-    @GetMapping(value = APP_ROOT + "/sessions/count/{user}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = APP_ROOT + "/sessions/count/{userId}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Renvoie le nombre de sessions d'un utilisateur", description = "Renvoie le nombre de sessions d'un utilisateur")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Le nombre de sessions a été trouvé"),
             @ApiResponse(responseCode = "404", description = "Aucun utilisateur n'a été trouvé avec cet id")
     })
-    Long countSessionsByUser(@PathVariable User user);
+    Long countSessionsByUser(@PathVariable Integer userId);
 
-    @GetMapping(value = APP_ROOT + "/sessions/games-played/{user}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = APP_ROOT + "/sessions/games-played/{userId}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Renvoie le nombre de jeux joués par un utilisateur", description = "Renvoie le nombre de jeux joués par un utilisateur")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Le nombre de jeux joués a été trouvé"),
             @ApiResponse(responseCode = "404", description = "Aucun utilisateur n'a été trouvé avec cet id")
     })
-    Integer countGamesPlayedByUser(@PathVariable User user);
+    Integer countGamesPlayedByUser(@PathVariable Integer userId);
 
-    @GetMapping(value = APP_ROOT + "/sessions/longest/{user}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = APP_ROOT + "/sessions/longest/{userId}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Renvoie la session de jeu la plus longue d'un utilisateur", description = "Renvoie la session de jeu la plus longue d'un utilisateur")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "La session a été trouvée"),
             @ApiResponse(responseCode = "404", description = "Aucune session n'a été trouvée pour cet utilisateur")
     })
-    DailyGameSessionDto getLongestSessionForUser(@PathVariable User user);
+    DailyGameSessionDto getLongestSessionForUser(@PathVariable Integer userId);
 
-    @GetMapping(value = APP_ROOT + "/sessions/recent/{user}/{limit}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = APP_ROOT + "/sessions/recent/{userId}/{limit}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Renvoie les sessions de jeu récentes d'un utilisateur", description = "Renvoie les sessions de jeu récentes d'un utilisateur")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Les sessions ont été trouvées"),
             @ApiResponse(responseCode = "404", description = "Aucune session n'a été trouvée pour cet utilisateur")
     })
-    List<DailyGameSessionDto> getRecentSessionsForUser(@PathVariable User user, @PathVariable int limit);
+    List<DailyGameSessionDto> getRecentSessionsForUser(@PathVariable Integer userId, @PathVariable int limit);
 
-    @GetMapping(value = APP_ROOT + "/sessions/average-playtime/{user}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = APP_ROOT + "/sessions/average-playtime/{userId}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Renvoie le temps de jeu moyen d'un utilisateur", description = "Renvoie le temps de jeu moyen d'un utilisateur")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Le temps de jeu moyen a été trouvé"),
             @ApiResponse(responseCode = "404", description = "Aucun utilisateur n'a été trouvé avec cet id")
     })
-    Double calculateAveragePlaytimeByUser(@PathVariable User user);
+    Double calculateAveragePlaytimeByUser(@PathVariable Integer userId);
 
 
 }

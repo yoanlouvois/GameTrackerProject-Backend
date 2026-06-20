@@ -2,14 +2,16 @@ package com.et4.gametrackerproject.dto;
 
 import com.et4.gametrackerproject.model.Tag;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 
 import java.util.HashSet;
 import java.util.Set;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode
 public class TagDto {
     private Integer id;
 

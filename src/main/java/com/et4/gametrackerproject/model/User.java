@@ -17,7 +17,13 @@ import java.util.Set;
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = true, exclude = {
+        "favoriteGames", "friendShipsInitiated", "friendshipsReceived", "comments",
+        "likes", "leaderboardsLines", "progressions", "ratings", "recommendationsSent",
+        "recommendationsReceived", "messagesSent", "messagesReceived", "notifications",
+        "reportsSent", "reportsAgainst", "reportsResolved", "achievementsEarned",
+        "sanctionsReceived", "sanctionsDistributed", "winStreaks", "dailyGameSessions"
+})
 @Entity
 @Table(name = "user")
 public class User extends AbstractEntity{

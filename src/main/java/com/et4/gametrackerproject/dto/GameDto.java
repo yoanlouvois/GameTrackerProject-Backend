@@ -4,8 +4,7 @@ import com.et4.gametrackerproject.enums.DifficultyLevel;
 import com.et4.gametrackerproject.enums.GameCategory;
 import com.et4.gametrackerproject.model.Game;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 
 import java.time.Instant;
 import java.util.HashSet;
@@ -14,6 +13,9 @@ import java.util.stream.Collectors;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode
 public class GameDto {
     private Integer id;
 
@@ -22,6 +24,8 @@ public class GameDto {
     private Instant lastModifiedDate;
 
     private String name;
+
+    private String imageUrl;
 
     private String url;
 
@@ -81,6 +85,7 @@ public class GameDto {
                 .creationDate(game.getCreationDate())
                 .lastModifiedDate(game.getLastModifiedDate())
                 .name(game.getName())
+                .imageUrl(game.getImageUrl())
                 .url(game.getUrl())
                 .description(game.getDescription())
                 .category(game.getCategory())
@@ -108,6 +113,7 @@ public class GameDto {
                 .lastModifiedDate(gameDto.getLastModifiedDate())
                 .name(gameDto.getName())
                 .url(gameDto.getUrl())
+                .imageUrl(gameDto.getImageUrl())
                 .description(gameDto.getDescription())
                 .category(gameDto.getCategory())
                 .averageRating(gameDto.getAverageRating())

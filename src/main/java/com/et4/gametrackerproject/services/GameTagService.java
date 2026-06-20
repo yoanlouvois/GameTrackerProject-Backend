@@ -1,31 +1,29 @@
 package com.et4.gametrackerproject.services;
 
 import com.et4.gametrackerproject.dto.GameTagDto;
-import com.et4.gametrackerproject.dto.TagDto;
-import com.et4.gametrackerproject.model.Game;
 import com.et4.gametrackerproject.model.Tag;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 public interface GameTagService {
 
-    Set<GameTagDto> addMultipleTagsToGame(Game game, Set<Tag> tags);
+    Set<GameTagDto> addMultipleTagsToGame(Integer gameId, Set<Tag> tags);
 
-    int removeMultipleTagsFromGame(Game game, Set<Tag> tags);
-
-    void removeTagFromGame(Game game, Tag tag);
+    void deleteGameTagById(Integer gameTagId);
 
     GameTagDto updateTagAssociation(Integer associationId, Integer newTagId);
 
-    Page<GameTagDto> getTagsForGame(Game game, Pageable pageable);
+    Page<GameTagDto> getTagsForGame(Integer gameId, Pageable pageable);
 
-    Page<GameTagDto> getGamesForTag(Tag tag, Pageable pageable);
+    Page<GameTagDto> getGamesForTag(Integer tagId, Pageable pageable);
 
-    GameTagDto addTagToGame(Game game, Tag tag);
+    GameTagDto addTagToGame(Integer gameId, Integer tagId);
 
+    Long countTagsByGame(Integer gameId);
 
+    Long countGamesByTag(Integer tagId);
+
+    Set<GameTagDto> getMostPopularTags(Pageable pageable);
 }

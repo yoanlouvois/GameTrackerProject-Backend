@@ -1,14 +1,20 @@
 package com.et4.gametrackerproject.services.impl;
 
+import ch.qos.logback.classic.Logger;
 import com.et4.gametrackerproject.dto.FavoriteGameDto;
 import com.et4.gametrackerproject.dto.GameDto;
 import com.et4.gametrackerproject.dto.UserDto;
 import com.et4.gametrackerproject.exception.EntityNotFoundException;
+import com.et4.gametrackerproject.exception.ErrorCodes;
+import com.et4.gametrackerproject.exception.InvalidOperationException;
 import com.et4.gametrackerproject.model.FavoriteGame;
 import com.et4.gametrackerproject.model.Game;
 import com.et4.gametrackerproject.model.User;
 import com.et4.gametrackerproject.repository.FavoriteGameRepository;
+import com.et4.gametrackerproject.repository.GameRepository;
+import com.et4.gametrackerproject.repository.UserRepository;
 import com.et4.gametrackerproject.services.FavoriteGameService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -16,13 +22,18 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class FavoriteGameServiceImpl implements FavoriteGameService {
 
     private final FavoriteGameRepository favoriteGameRepository;
+    private final UserRepository userRepository;
+    private final GameRepository gameRepository;
 
-    public FavoriteGameServiceImpl(FavoriteGameRepository favoriteGameRepository) {
+    public FavoriteGameServiceImpl(FavoriteGameRepository favoriteGameRepository, UserRepository userRepository, GameRepository gameRepository) {
         this.favoriteGameRepository = favoriteGameRepository;
+        this.userRepository = userRepository;
+        this.gameRepository = gameRepository;
     }
 
     @Override
@@ -108,21 +119,29 @@ public class FavoriteGameServiceImpl implements FavoriteGameService {
     }
 
     @Override
-    public void removeFromFavorites(Integer favoriteId) {
+    public void deleteById(Integer favoriteId) {
         if (favoriteId == null) {
             throw new IllegalArgumentException("L'ID du favori ne peut être null");
         }
+        Optional<User> users = userRepository.findByFavoriteId(favoriteId);
+        if (users.isPresent()) {
+            log.error("Impossible de supprimer le favori, l'utilisateur a des messages associés");
+            throw new InvalidOperationException("Impossible de supprimer le favori, l'utilisateur a des messages associés",
+                    ErrorCodes.FAVORITE_GAME_ALREADY_USED);
+        }
+
+        Optional<Game> games = gameRepository.findByFavoriteId(favoriteId);
+        if (games.isPresent()) {
+            log.error("Impossible de supprimer le favori, le jeu a des messages associés");
+            throw new InvalidOperationException("Impossible de supprimer le favori, le jeu a des messages associés",
+                    ErrorCodes.FAVORITE_GAME_ALREADY_USED);
+        }
+
+
         favoriteGameRepository.deleteById(favoriteId);
     }
 
-    @Override
-    public void clearUserFavorites(Integer userId) {
-        if (userId == null) {
-            throw new IllegalArgumentException("L'ID utilisateur ne peut être null");
-        }
 
-        favoriteGameRepository.deleteAll(favoriteGameRepository.findByUser(User.builder().id(userId).build()));
-    }
 
     @Override
     public boolean isGameFavoritedByUser(Integer userId, Integer gameId) {
@@ -190,20 +209,6 @@ public class FavoriteGameServiceImpl implements FavoriteGameService {
         return favoriteGameRepository.countByUser(User.builder().id(userId).build());
     }
 
-    //Supprimer un jeu favori pour un utilisateur spécifique
-    @Override
-    public void deleteFavoriteByUserAndGame(Integer userId, Integer gameId) {
-        if (userId == null || gameId == null) {
-            throw new IllegalArgumentException("L'ID utilisateur et l'ID du jeu doivent être fournis");
-        }
-        User user = User.builder().id(userId).build();
-        Game game = Game.builder().id(gameId).build();
-        // Optionally, check if the favorite exists before deletion:
-        Optional<FavoriteGame> favoriteOpt = favoriteGameRepository.findByUserAndGame(user, game);
-        if (favoriteOpt.isEmpty()) {
-            throw new EntityNotFoundException("Favori introuvable pour la suppression");
-        }
-        favoriteGameRepository.deleteByUserAndGame(user, game);
-    }
+
 
 }

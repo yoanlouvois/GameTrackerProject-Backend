@@ -12,16 +12,13 @@ public interface FavoriteGameService {
 
     //Opérations de base
     FavoriteGameDto addToFavorites(FavoriteGameDto favoriteDto);
-    void removeFromFavorites(Integer favoriteId);
+    void deleteById(Integer favoriteId);
 
     //Récupération
     List<GameDto> getFavoriteGamesForUser(Integer userId);
     List<UserDto> getUsersWhoFavoritedGame(Integer gameId);
     boolean isGameFavoritedByUser(Integer userId, Integer gameId);
     FavoriteGameDto getFavoriteById(Integer favoriteId);
-
-    // Gestion des listes
-    void clearUserFavorites(Integer userId);
 
     //Statistiques
     Long getTotalFavoritesCountForGame(Integer gameId);
@@ -40,6 +37,4 @@ public interface FavoriteGameService {
     //Compter le nombre de jeux favoris pour un utilisateur
     Long countFavoritesByUser(Integer userId);
 
-    //Supprimer un jeu favori pour un utilisateur spécifique
-    void deleteFavoriteByUserAndGame(Integer userId, Integer gameId);
 }

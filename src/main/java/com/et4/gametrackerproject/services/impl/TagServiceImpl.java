@@ -4,7 +4,10 @@ import com.et4.gametrackerproject.dto.TagDto;
 import com.et4.gametrackerproject.exception.EntityNotFoundException;
 import com.et4.gametrackerproject.exception.ErrorCodes;
 import com.et4.gametrackerproject.exception.InvalidEntityException;
+import com.et4.gametrackerproject.exception.InvalidOperationException;
 import com.et4.gametrackerproject.model.Game;
+import com.et4.gametrackerproject.model.GameTag;
+import com.et4.gametrackerproject.model.User;
 import com.et4.gametrackerproject.repository.GameRepository;
 import com.et4.gametrackerproject.repository.GameTagRepository;
 import com.et4.gametrackerproject.repository.TagRepository;
@@ -17,6 +20,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 @Slf4j
@@ -25,11 +29,13 @@ public class TagServiceImpl implements TagService {
 
     private final TagRepository tagRepository;
     private final GameRepository gameRepository;
+    private final GameTagRepository gameTagRepository;
 
     @Autowired
-    public TagServiceImpl(TagRepository tagRepository, GameRepository gameRepository) {
+    public TagServiceImpl(TagRepository tagRepository, GameRepository gameRepository, GameTagRepository gameTagRepository) {
         this.tagRepository = tagRepository;
         this.gameRepository = gameRepository;
+        this.gameTagRepository = gameTagRepository;
     }
 
     @Override
@@ -72,7 +78,7 @@ public class TagServiceImpl implements TagService {
     }
 
     @Override
-    public void deleteTag(Integer tagId) {
+    public void deleteTagById(Integer tagId) {
         if(tagId == null) {
             log.error("Tag ID is null");
             throw new InvalidEntityException("ID de tag non valide");
@@ -82,7 +88,12 @@ public class TagServiceImpl implements TagService {
             throw new EntityNotFoundException("Tag avec ID " + tagId + " n'existe pas", ErrorCodes.TAG_NOT_FOUND);
         }
 
-        log.info("Delete tag with ID {}", tagId);
+        Optional<GameTag> gameTags = gameTagRepository.findByTagId(tagId);
+        if (gameTags.isPresent()) {
+            log.error("Impossible de supprimer le tag avec l'ID {} car il est référencé par un gameTag", tagId);
+            throw new InvalidOperationException("Impossible de supprimer le tag car il est référencé par un gameTag",
+                    ErrorCodes.TAG_ALREADY_USED);
+        }
 
         tagRepository.deleteById(tagId);
     }

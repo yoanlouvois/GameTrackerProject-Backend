@@ -4,7 +4,6 @@ import com.et4.gametrackerproject.dto.GameRecommendationDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.util.List;
 import java.util.Map;
 
 public interface GameRecommendationService {
@@ -14,7 +13,7 @@ public interface GameRecommendationService {
 
     GameRecommendationDto updateRecommendationMessage(Integer recommendationId, String newMessage);
 
-    void deleteRecommendation(Integer recommendationId);
+    void deleteRecommendationById(Integer recommendationId);
 
     //Récupération
     GameRecommendationDto getRecommendationById(Integer recommendationId);
@@ -39,10 +38,5 @@ public interface GameRecommendationService {
     Long countRecommendationsSentByUser(Integer senderId);
 
     Page<GameRecommendationDto> searchRecommendations(String searchQuery, Pageable pageable);
-
-    // Supprime toutes les recommandations entre deux utilisateurs (dans les deux sens)
-    void removeAllRecommendationsBetweenUsers(Integer user1Id, Integer user2Id, Pageable pageable);
-
-    void removeAllRecommendationsForGame(Integer gameId);
 
 }

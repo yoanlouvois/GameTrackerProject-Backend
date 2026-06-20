@@ -1,9 +1,13 @@
 package com.et4.gametrackerproject.utils;
 
+import com.et4.gametrackerproject.dto.UserDto;
+import com.et4.gametrackerproject.model.auth.CustomUserDetails;
+import com.et4.gametrackerproject.services.UserService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -34,6 +38,9 @@ public class JwtUtil {
      * et pour vérifier leur signature lors de la validation.
      */
     private final SecretKey key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(SECRET_KEY));
+
+    @Autowired
+    UserService userService;
 
     /**
      * Extrait le nom d'utilisateur (subject) à partir d'un token JWT.
@@ -103,9 +110,16 @@ public class JwtUtil {
      */
     public String generateToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
-        // Des réclamations supplémentaires peuvent être ajoutées ici comme:
-        // claims.put("role", userDetails.getAuthorities());
+
+        if (userDetails instanceof CustomUserDetails) {
+            claims.put("userId", ((CustomUserDetails) userDetails).getUserId());
+        }
+
         return createToken(claims, userDetails.getUsername());
+    }
+
+    public Long extractUserId(String token) {
+        return extractClaim(token, claims -> claims.get("userId", Long.class));
     }
 
     /**

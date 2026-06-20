@@ -32,7 +32,7 @@ public class TagController implements TagApi {
 
     @Override
     public void deleteTag(Integer tagId) {
-        tagService.deleteTag(tagId);
+        tagService.deleteTagById(tagId);
     }
 
     @Override

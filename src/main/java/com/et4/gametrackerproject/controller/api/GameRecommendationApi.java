@@ -94,22 +94,6 @@ public interface GameRecommendationApi {
     })
     Page<GameRecommendationDto> searchRecommendations(@RequestBody String searchQuery, Pageable pageable);
 
-    @DeleteMapping(value = APP_ROOT + "/recommendation/remove/users/{user1Id}/{user2Id}")
-    @Operation(summary = "Supprimer toutes les recommendations entre deux utilisateurs", description = "Supprimer toutes les recommendations entre deux utilisateurs")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "recommendations supprimées"),
-            @ApiResponse(responseCode = "404", description = "Aucune recommendation trouvée entre ces deux utilisateurs")
-    })
-    void removeAllRecommendationsBetweenUsers(@PathVariable Integer user1Id, @PathVariable Integer user2Id, Pageable pageable);
-
-    @DeleteMapping(value = APP_ROOT + "/recommendation/remove/game/{gameId}")
-    @Operation(summary = "Supprimer toutes les recommendations pour un jeu", description = "Supprimer toutes les recommendations pour un jeu")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "recommendations supprimées"),
-            @ApiResponse(responseCode = "404", description = "Aucune recommendation trouvée pour ce jeu")
-    })
-    void removeAllRecommendationsForGame(@PathVariable Integer gameId);
-
     @GetMapping(value = APP_ROOT + "/recommendation/mostRecommended", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Récupérer les jeux les plus recommandés", description = "Récupérer les jeux les plus recommandés")
     @ApiResponses({

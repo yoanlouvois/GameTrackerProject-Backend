@@ -15,10 +15,9 @@ import java.util.Optional;
 
 public interface UserSanctionRepository extends JpaRepository<UserSanction,Integer> {
 
-    // Requêtes de base
-    List<UserSanction> findByUser(User user);
-
-    Page<UserSanction> findByUser(User user, Pageable pageable);
+    // Récupérer toutes les sanctions d'un utilisateur
+    @Query("SELECT us FROM UserSanction us WHERE us.user = :user")
+    Optional<UserSanction> findByUserId(Integer userId);
 
     Page<UserSanction> findByUserId(Integer userId, Pageable pageable);
 

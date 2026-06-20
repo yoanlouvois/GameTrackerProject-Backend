@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 @RestController
 public class GameCommentLikeController implements GameCommentLikeApi {
@@ -31,7 +30,7 @@ public class GameCommentLikeController implements GameCommentLikeApi {
 
     @Override
     public void removeLike(Integer likeId) {
-        gameCommentLikeService.removeCommentLike(likeId);
+        gameCommentLikeService.deleteGameCommentLikeById(likeId);
     }
 
     @Override

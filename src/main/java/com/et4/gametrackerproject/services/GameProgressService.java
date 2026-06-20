@@ -11,7 +11,7 @@ public interface GameProgressService {
     // Opérations de base
     GameProgressDto createOrUpdateProgress(GameProgressDto progressDto);
     GameProgressDto getProgressById(Integer progressId);
-    void deleteProgress(Integer progressId);
+    void deleteGameProgressById(Integer progressId);
 
     //Gestion de la progression
     GameProgressDto startNewGameSession(Integer userId, Integer gameId);

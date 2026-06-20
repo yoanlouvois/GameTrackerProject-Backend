@@ -46,4 +46,8 @@ public interface TagRepository extends JpaRepository<Tag,Integer> {
     // Trouver les jeux qui ont au moins un des tags spécifiés
     @Query("SELECT DISTINCT gt.game FROM GameTag gt WHERE gt.tag IN :tags")
     List<Game> findGamesByAnyTag(@Param("tags") Set<Tag> tags);
+
+    // Trouver les tag par tagId
+    @Query("SELECT t FROM Tag t JOIN t.gameTags gt WHERE gt.id = :gameTagId")
+    Optional<Tag> findByGameTagId(@Param("gameTagId") Integer gameTagId);
 }

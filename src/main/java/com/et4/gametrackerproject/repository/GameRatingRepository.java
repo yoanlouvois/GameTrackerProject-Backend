@@ -57,4 +57,7 @@ public interface GameRatingRepository extends JpaRepository<GameRating,Integer> 
             "   OR LOWER(gr.user.username) LIKE LOWER(CONCAT('%', :searchQuery, '%'))")
     Page<GameRating> searchRatings(@Param("searchQuery") String searchQuery, Pageable pageable);
 
+    // Récupérer la note d'un jeu id
+    @Query("SELECT gr FROM GameRating gr WHERE gr.game.id = :id")
+    Optional<GameRating> findByGameId(Integer id);
 }

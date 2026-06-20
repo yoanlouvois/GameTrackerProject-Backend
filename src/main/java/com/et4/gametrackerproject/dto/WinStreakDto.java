@@ -2,13 +2,15 @@ package com.et4.gametrackerproject.dto;
 
 import com.et4.gametrackerproject.model.WinStreak;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 
 import java.time.Instant;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode
 public class WinStreakDto {
     private Integer id;
 

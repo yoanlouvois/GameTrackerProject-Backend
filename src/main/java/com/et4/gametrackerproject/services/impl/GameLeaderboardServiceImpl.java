@@ -4,6 +4,7 @@ import com.et4.gametrackerproject.dto.GameLeaderboardDto;
 import com.et4.gametrackerproject.enums.LeaderboardPeriod;
 import com.et4.gametrackerproject.exception.EntityNotFoundException;
 import com.et4.gametrackerproject.exception.ErrorCodes;
+import com.et4.gametrackerproject.exception.InvalidOperationException;
 import com.et4.gametrackerproject.model.Game;
 import com.et4.gametrackerproject.model.GameLeaderboard;
 import com.et4.gametrackerproject.model.User;
@@ -69,27 +70,31 @@ public class GameLeaderboardServiceImpl implements GameLeaderboardService {
 
     // Supprime une entrée de leaderboard par son ID.
     @Override
-    public void deleteScoreEntry(Integer entryId) {
+    public void deleteGameLeaderBoardById(Integer entryId) {
         if (entryId == null) {
             throw new IllegalArgumentException("L'ID de l'entrée ne peut être null");
         }
         GameLeaderboard existing = gameLeaderboardRepository.findById(entryId)
                 .orElseThrow(() -> new EntityNotFoundException("Entrée de leaderboard non trouvée avec l'ID " + entryId, ErrorCodes.GAME_LEADERBOARD_NOT_FOUND));
+
+        Optional<Game> games = gameRepository.findByGameLeaderboardId(entryId);
+        if (games.isPresent()) {
+            log.error("Impossible de supprimer l'entrée de leaderboard avec l'ID {} car elle est utilisée par le jeu {}", entryId, games.get().getId());
+            throw new InvalidOperationException("Impossible de supprimer l'entrée de leaderboard car elle est utilisée par le jeu",
+                    ErrorCodes.GAME_LEADERBOARD_ALREADY_USED);
+        }
+
+        Optional<User> users = userRepository.findByGameLeaderboardId(entryId);
+        if (users.isPresent()) {
+            log.error("Impossible de supprimer l'entrée de leaderboard avec l'ID {} car elle est utilisée par l'utilisateur {}", entryId, users.get().getId());
+            throw new InvalidOperationException("Impossible de supprimer l'entrée de leaderboard car elle est utilisée par l'utilisateur",
+                    ErrorCodes.GAME_LEADERBOARD_ALREADY_USED);
+        }
+
         gameLeaderboardRepository.delete(existing);
-        log.info("Entrée de leaderboard avec l'ID {} supprimée", entryId);
     }
 
-    @Override
-    public void resetLeaderboard(Integer gameId, LeaderboardPeriod period) {
-        // On ignore le paramètre "period" car on réinitialise le leaderboard pour l'ensemble du jeu.
-        if (gameId == null) {
-            throw new IllegalArgumentException("L'ID du jeu ne peut être null");
-        }
-        Game game = gameRepository.findById(gameId)
-                .orElseThrow(() -> new EntityNotFoundException("Jeu non trouvé avec l'ID " + gameId, ErrorCodes.GAME_NOT_FOUND));
-        gameLeaderboardRepository.deleteGameLeaderboardByGame(game);
-        log.info("Leaderboard réinitialisé pour le jeu {}", gameId);
-    }
+
 
 
 

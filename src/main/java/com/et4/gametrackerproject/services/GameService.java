@@ -34,6 +34,8 @@ public interface GameService {
     // Recherche d'un jeu par son URL
     Optional<Game> getGameByUrl(String url);
 
+    String getImageUrlById(Integer id);
+
     // Recherche des jeux par nom exact
     List<Game> getGamesByName(String name);
 

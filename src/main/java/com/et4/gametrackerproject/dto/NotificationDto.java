@@ -3,13 +3,15 @@ package com.et4.gametrackerproject.dto;
 import com.et4.gametrackerproject.enums.NotifType;
 import com.et4.gametrackerproject.model.Notification;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 
 import java.time.Instant;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode
 public class NotificationDto {
     private Integer id;
 

@@ -4,8 +4,7 @@ import com.et4.gametrackerproject.enums.AchievementRarity;
 import com.et4.gametrackerproject.enums.AchievementType;
 import com.et4.gametrackerproject.model.Achievement;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 
 import java.util.HashSet;
 import java.util.Map;
@@ -13,6 +12,9 @@ import java.util.Set;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode
 public class AchievementDto {
     private Integer id;
 
