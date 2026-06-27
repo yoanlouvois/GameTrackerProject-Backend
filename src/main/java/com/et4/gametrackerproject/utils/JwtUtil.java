@@ -10,6 +10,7 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Value;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
@@ -24,20 +25,12 @@ import java.util.function.Function;
 @Service
 public class JwtUtil {
 
-    /**
-     * Clé secrète utilisée pour signer les tokens JWT.
-     * Elle est encodée en Base64, ce qui est recommandé pour la sécurité.
-     * NOTE IMPORTANTE: Dans un environnement de production, cette clé devrait être stockée
-     * dans une configuration externe sécurisée, comme les variables d'environnement ou un coffre-fort.
-     */
-    private final String SECRET_KEY = "YXNkZmFzZGZhc2RmYXNkZmFzZGZhc2RmYXNkZmFzZGZhc2RmYXNkZmFzZGZhc2Rm";
+    @Value("${jwt.secret}")
+    private String secretKey;
 
-    /**
-     * Conversion de la clé secrète encodée en Base64 en objet SecretKey utilisé pour la signature.
-     * Cette clé est utilisée à la fois pour signer les tokens lors de leur création
-     * et pour vérifier leur signature lors de la validation.
-     */
-    private final SecretKey key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(SECRET_KEY));
+    private SecretKey getSigningKey() {
+        return Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKey));
+    }
 
     @Autowired
     UserService userService;
@@ -86,7 +79,7 @@ public class JwtUtil {
      */
     private Claims extractAllClaims(String token) {
         return Jwts.parser()
-                .verifyWith(key)  // Vérifie la signature du token avec notre clé
+                .verifyWith(getSigningKey())  // Vérifie la signature du token avec notre clé
                 .build()
                 .parseSignedClaims(token)  // Analyse le token signé
                 .getPayload();  // Récupère le contenu (payload)
@@ -135,7 +128,7 @@ public class JwtUtil {
                 .subject(subject)              // Sujet du token (username)
                 .issuedAt(new Date(System.currentTimeMillis()))  // Date d'émission
                 .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10))  // Expiration après 10h
-                .signWith(key)                 // Signature avec la clé secrète
+                .signWith(getSigningKey())                 // Signature avec la clé secrète
                 .compact();                    // Création du token sous forme de chaîne
     }
 
