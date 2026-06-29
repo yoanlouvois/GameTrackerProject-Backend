@@ -9,7 +9,7 @@ Le backend expose les différentes API nécessaires au fonctionnement de la plat
 L'application s'appuie sur une base de données **MySQL** exécutée dans un conteneur **Docker**, facilitant le déploiement et la reproductibilité de l'environnement de développement.
 
 <p align="center">
-  <img width="75%" alt="Capture d&#39;écran 2026-05-08 001001" src="https://github.com/user-attachments/assets/af2d4bb9-663d-47fb-a6bb-d61e3c4242e0" />
+  <img width="75%" height="410" alt="liste" src="https://github.com/user-attachments/assets/b8f26954-b787-4278-b6be-98117872763e" />
 </p>
 
 
